@@ -1,6 +1,6 @@
 workflows:
-  ios-simulator-nefes:
-    name: iOS Simulator Build (Nefes)
+  ios-simulator-vicdan:
+    name: iOS Simulator Build (Vicdan)
     max_build_duration: 60
     instance_type: mac_mini_m2
     environment:
@@ -18,10 +18,10 @@ workflows:
         script: |
           # Simülatör modunda imzalamadan derle
           flutter build ios --debug --simulator --no-codesign
-      - name: Nefes.zip Olustur
+      - name: Vicdan.zip Olustur
         script: |
           cd build/ios/iphonesimulator
-          rm -f Nefes_Sim.zip
-          zip -r Nefes_Sim.zip Runner.app
+          rm -f Vicdan_Sim.zip
+          zip -r Vicdan_Sim.zip Runner.app
     artifacts:
-      - build/ios/iphonesimulator/Nefes_Sim.zip
+      - build/ios/iphonesimulator/Vicdan_Sim.zip
