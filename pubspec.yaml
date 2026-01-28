@@ -1,0 +1,101 @@
+name: vicdan_app
+description: "VİCDAN - Vicdan Arkadaşı"
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.5.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  # State Management
+  flutter_riverpod: ^2.4.9
+  
+  # Local Database
+  drift: ^2.14.1
+  sqlite3_flutter_libs: ^0.5.18
+  path_provider: ^2.1.1
+  path: ^1.9.1
+  
+  # Prayer Times
+  adhan: ^2.0.0+1
+  
+  # UI & Animation
+  flutter_animate: ^4.3.0
+  
+  # Notifications
+  flutter_local_notifications: ^18.0.0
+  
+  # Utilities
+  intl: ^0.18.1
+  shared_preferences: ^2.5.4
+  permission_handler: ^12.0.1
+  geolocator: ^13.0.0
+  geocoding: ^3.0.0
+  flutter_compass: ^0.8.0
+  
+  # Animation
+  lottie: ^3.1.0
+  sqflite: ^2.4.2
+  uuid: ^4.5.2
+  equatable: ^2.0.8
+  just_audio: ^0.10.5
+  audio_session: ^0.2.2
+  scrollable_positioned_list: ^0.3.8
+  connectivity_plus: ^7.0.0
+  flutter_lucide: ^1.8.2
+  
+  # Charts for Statistics
+  fl_chart: ^0.68.0
+  
+  # Timezone for notifications
+  timezone: ^0.10.1
+  
+  # Share Center
+  screenshot: ^3.0.0
+  share_plus: ^10.0.0
+  hijri: ^3.0.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.1
+  drift_dev: ^2.14.1
+  build_runner: ^2.4.7
+  flutter_launcher_icons: ^0.13.1
+
+
+flutter:
+  uses-material-design: true
+  
+  assets:
+    - assets/rive/
+    - assets/lottie/
+    - assets/quran/
+    - assets/audio/
+  
+  # Inter font family (Google Fonts)
+  fonts:
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/Inter-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Inter-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Inter-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Inter-Bold.ttf
+          weight: 700
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: false # Disabled since ios folder is missing
+  remove_alpha_ios: true
+  image_path: "assets/images/app_icon.png"
+  min_sdk_android: 21 
+  adaptive_icon_background: "#121212" # Dark background matching the logo aura
+  adaptive_icon_foreground: "assets/images/app_icon.png"
+
+
