@@ -1,0 +1,31 @@
+workflows:
+  ios-simulator-build:
+    name: iOS Simulator Build (Appetize.io)
+    max_build_duration: 60
+    instance_type: mac_mini_m1
+    environment:
+      flutter: stable
+      xcode: latest
+      cocoapods: default
+    scripts:
+      - name: Get Flutter dependencies
+        script: |
+          flutter packages pub get
+      - name: Install CocoaPods
+        script: |
+          find ios -name "Podfile" -exec dir "{}" \; && cd ios && pod install && cd ..
+      - name: Build iOS for Simulator
+        script: |
+          # Build .app for simulator (Debug mode, no codesigning needed)
+          flutter build ios --debug --simulator --no-codesign
+      - name: Zip Runner.app
+        script: |
+          # Navigate to the build directory
+          cd build/ios/iphonesimulator
+          # Zip the .app bundle
+          zip -r Antigravity_Sim.zip Runner.app
+          # Move to the root directory for easy artifact export
+          mv Antigravity_Sim.zip ../../../Antigravity_Sim.zip
+          echo "Zip created at: $(pwd)/../../../Antigravity_Sim.zip"
+    artifacts:
+      - Antigravity_Sim.zip
