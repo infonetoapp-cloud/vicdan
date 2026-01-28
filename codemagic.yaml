@@ -1,22 +1,29 @@
 workflows:
-  ios-simulator-build:
-    name: iOS Simulator Build for Appetize
+  ios-simulator-fix:
+    name: iOS Simulator Fix Build
     max_build_duration: 60
+    instance_type: mac_mini_m2
     environment:
       flutter: stable
       xcode: latest
       cocoapods: default
     scripts:
-      - name: Install dependencies
+      - name: Derleme Ortamini Temizle (Clean)
+        script: flutter clean
+      - name: Bagimliliklari Yükle
         script: |
           flutter pub get
           find . -name "Podfile" -execdir pod install \;
-      - name: Build iOS Simulator .app
+      - name: Simulator Icin Derle (Zorunlu)
         script: |
-          flutter build ios --debug --simulator
-      - name: Zip the .app for Appetize
+          # --no-codesign ve --simulator bayraklari hata riskini azaltir
+          flutter build ios --debug --simulator --no-codesign
+      - name: Runner.app Klasorunu Ziple
         script: |
           cd build/ios/iphonesimulator
-          zip -r content.zip Runner.app
+          # Eski zip varsa sil
+          rm -f Neto_Fixed.zip
+          # Yeni zip olustur
+          zip -r Neto_Fixed.zip Runner.app
     artifacts:
-      - build/ios/iphonesimulator/content.zip
+      - build/ios/iphonesimulator/Neto_Fixed.zip
