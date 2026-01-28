@@ -1,6 +1,6 @@
 workflows:
-  ios-simulator-fix:
-    name: iOS Simulator Fix Build
+  ios-simulator-nefes:
+    name: iOS Simulator Build (Nefes)
     max_build_duration: 60
     instance_type: mac_mini_m2
     environment:
@@ -8,22 +8,20 @@ workflows:
       xcode: latest
       cocoapods: default
     scripts:
-      - name: Derleme Ortamini Temizle (Clean)
+      - name: Temizlik Yap (Clean)
         script: flutter clean
       - name: Bagimliliklari Yükle
         script: |
           flutter pub get
           find . -name "Podfile" -execdir pod install \;
-      - name: Simulator Icin Derle (Zorunlu)
+      - name: Simulator Icin Derle
         script: |
-          # --no-codesign ve --simulator bayraklari hata riskini azaltir
+          # Simülatör modunda imzalamadan derle
           flutter build ios --debug --simulator --no-codesign
-      - name: Runner.app Klasorunu Ziple
+      - name: Nefes.zip Olustur
         script: |
           cd build/ios/iphonesimulator
-          # Eski zip varsa sil
-          rm -f Neto_Fixed.zip
-          # Yeni zip olustur
-          zip -r Neto_Fixed.zip Runner.app
+          rm -f Nefes_Sim.zip
+          zip -r Nefes_Sim.zip Runner.app
     artifacts:
-      - build/ios/iphonesimulator/Neto_Fixed.zip
+      - build/ios/iphonesimulator/Nefes_Sim.zip
