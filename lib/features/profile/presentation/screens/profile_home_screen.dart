@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../shared/widgets/sky_gradient_background.dart';
+
 import '../../../../shared/widgets/glass_card.dart';
 import '../../domain/entities/user_stats.dart';
 import '../../data/repositories/profile_repository_impl.dart';
 import '../../../tasks/data/repositories/task_repository_impl.dart';
 import '../../../tasks/data/datasources/local_task_datasource.dart';
-import '../../../share/presentation/screens/share_center_screen.dart';
+
 import 'statistics_screen.dart';
 import 'settings_screen.dart';
 
@@ -47,7 +48,7 @@ class _ProfileHomeScreenState extends State<ProfileHomeScreen> {
         });
       }
     } catch (e) {
-      debugPrint("Error loading stats: $e");
+      debugPrint('Error loading stats: $e');
       if (mounted) {
         setState(() => _isLoading = false);
       }
@@ -60,19 +61,28 @@ class _ProfileHomeScreenState extends State<ProfileHomeScreen> {
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         title: const Text(
-          "Profil",
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          'Profil',
+          style:
+              TextStyle(color: AppColors.textDark, fontWeight: FontWeight.bold),
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
         automaticallyImplyLeading: false, // No back button for tab
       ),
-      body: SkyGradientBackground(
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [AppColors.backgroundTop, AppColors.backgroundBottom],
+          ),
+        ),
         child: SafeArea(
           child: _isLoading
               ? const Center(
-                  child: CircularProgressIndicator(color: Colors.white))
+                  child:
+                      CircularProgressIndicator(color: AppColors.primaryGreen))
               : _buildContent(),
         ),
       ),
@@ -97,49 +107,60 @@ class _ProfileHomeScreenState extends State<ProfileHomeScreen> {
   Widget _buildHeader() {
     final initials = _stats?.userName.isNotEmpty == true
         ? _stats!.userName.substring(0, 1).toUpperCase()
-        : "?";
+        : '?';
 
     return GlassCard(
-      opacity: 0.15,
+      opacity: 0.8, // More opaque for light theme visibility
+      borderOpacity: 0.1,
       child: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
           children: [
-            Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: LinearGradient(
-                  colors: [
-                    AppColors.goldenHour.withOpacity(0.8),
-                    AppColors.sage.withOpacity(0.6),
+            GestureDetector(
+              onTap: _showAvatarPicker,
+              child: Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    colors: [
+                      AppColors.primaryGreen.withOpacity(0.8),
+                      AppColors.sage.withOpacity(0.6),
+                    ],
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.primaryGreen.withOpacity(0.3),
+                      blurRadius: 20,
+                      spreadRadius: 5,
+                    ),
                   ],
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.goldenHour.withOpacity(0.3),
-                    blurRadius: 20,
-                    spreadRadius: 5,
-                  ),
-                ],
-              ),
-              child: Center(
-                child: Text(
-                  initials,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                  ),
+                child: Center(
+                  child: _stats?.avatarUrl != null
+                      ? Icon(
+                          IconData(int.parse(_stats!.avatarUrl!),
+                              fontFamily: 'MaterialIcons'),
+                          color: Colors.white,
+                          size: 40,
+                        )
+                      : Text(
+                          initials,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                 ),
               ),
             ),
             const SizedBox(height: 16),
             Text(
-              _stats?.userName ?? "Yolcu",
+              _stats?.userName ?? 'Yolcu',
               style: const TextStyle(
-                color: Colors.white,
+                color: AppColors.textDark,
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
               ),
@@ -156,15 +177,18 @@ class _ProfileHomeScreenState extends State<ProfileHomeScreen> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.local_fire_department,
+                  const Icon(Icons.auto_awesome_rounded,
                       color: AppColors.goldenHour, size: 20),
                   const SizedBox(width: 8),
-                  Text(
-                    "${_stats?.currentStreak ?? 0} gündür bu yoldasın",
-                    style: const TextStyle(
-                      color: AppColors.goldenHour,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
+                  Flexible(
+                    child: Text(
+                      '${_stats?.daysUsingApp ?? 0} gündür vicdanınla berabersin',
+                      style: const TextStyle(
+                        color: AppColors.goldenHour,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ],
@@ -181,27 +205,27 @@ class _ProfileHomeScreenState extends State<ProfileHomeScreen> {
       children: [
         Expanded(
           child: _buildStatCard(
-            icon: Icons.bolt,
-            label: "Vicdan Gücü",
-            value: "${_stats?.todayScore ?? 0}",
+            icon: Icons.calendar_today_rounded,
+            label: 'Yolculuk',
+            value: '${_stats?.daysUsingApp ?? 1} GÜN',
+            color: AppColors.primaryGreen,
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: _buildStatCard(
+            icon: Icons.auto_awesome_rounded,
+            label: 'Seri',
+            value: '${_stats?.currentStreak ?? 1}',
             color: AppColors.goldenHour,
           ),
         ),
         const SizedBox(width: 12),
         Expanded(
           child: _buildStatCard(
-            icon: Icons.whatshot,
-            label: "En Uzun Seri",
-            value: "${_stats?.longestStreak ?? 0} gün",
-            color: Colors.orangeAccent,
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _buildStatCard(
-            icon: Icons.check_circle,
-            label: "Toplam",
-            value: "${_stats?.totalCompletedTasks ?? 0}",
+            icon: Icons.task_alt_rounded,
+            label: 'Toplam',
+            value: '${_stats?.totalCompletedTasks ?? 0}',
             color: AppColors.sage,
           ),
         ),
@@ -216,7 +240,7 @@ class _ProfileHomeScreenState extends State<ProfileHomeScreen> {
     required Color color,
   }) {
     return GlassCard(
-      opacity: 0.1,
+      opacity: 0.8,
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
         child: Column(
@@ -234,8 +258,8 @@ class _ProfileHomeScreenState extends State<ProfileHomeScreen> {
             const SizedBox(height: 4),
             Text(
               label,
-              style: const TextStyle(
-                color: Colors.white70,
+              style: TextStyle(
+                color: AppColors.textDark.withOpacity(0.6),
                 fontSize: 11,
               ),
               textAlign: TextAlign.center,
@@ -251,8 +275,8 @@ class _ProfileHomeScreenState extends State<ProfileHomeScreen> {
       children: [
         _buildMenuItem(
           icon: Icons.bar_chart_rounded,
-          title: "İstatistikler",
-          subtitle: "Detaylı performans analizi",
+          title: 'İstatistikler',
+          subtitle: 'Detaylı performans analizi',
           onTap: () => Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => const StatisticsScreen()),
@@ -260,19 +284,9 @@ class _ProfileHomeScreenState extends State<ProfileHomeScreen> {
         ),
         const SizedBox(height: 12),
         _buildMenuItem(
-          icon: Icons.share_rounded,
-          title: "Paylaşım Merkezi",
-          subtitle: "Hikayeni paylaş",
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const ShareCenterScreen()),
-          ),
-        ),
-        const SizedBox(height: 12),
-        _buildMenuItem(
           icon: Icons.settings_rounded,
-          title: "Ayarlar",
-          subtitle: "Uygulama tercihleri",
+          title: 'Ayarlar',
+          subtitle: 'Uygulama tercihleri',
           onTap: () => Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => const SettingsScreen()),
@@ -281,8 +295,8 @@ class _ProfileHomeScreenState extends State<ProfileHomeScreen> {
         const SizedBox(height: 12),
         _buildMenuItem(
           icon: Icons.info_outline_rounded,
-          title: "Hakkında",
-          subtitle: "Versiyon 1.0.0",
+          title: 'Hakkında',
+          subtitle: 'Versiyon 1.0.0',
           onTap: () => _showAboutDialog(),
         ),
       ],
@@ -296,7 +310,7 @@ class _ProfileHomeScreenState extends State<ProfileHomeScreen> {
     required VoidCallback onTap,
   }) {
     return GlassCard(
-      opacity: 0.1,
+      opacity: 1.0, // Fully solid cards for menu
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(16),
@@ -307,10 +321,10 @@ class _ProfileHomeScreenState extends State<ProfileHomeScreen> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.1),
+                  color: AppColors.primaryGreen.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(icon, color: Colors.white, size: 24),
+                child: Icon(icon, color: AppColors.primaryGreen, size: 24),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -320,7 +334,7 @@ class _ProfileHomeScreenState extends State<ProfileHomeScreen> {
                     Text(
                       title,
                       style: const TextStyle(
-                        color: Colors.white,
+                        color: AppColors.textDark,
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                       ),
@@ -329,16 +343,87 @@ class _ProfileHomeScreenState extends State<ProfileHomeScreen> {
                     Text(
                       subtitle,
                       style: const TextStyle(
-                        color: Colors.white54,
+                        color: AppColors.textLight,
                         fontSize: 13,
                       ),
                     ),
                   ],
                 ),
               ),
-              const Icon(Icons.chevron_right, color: Colors.white54),
+              const Icon(Icons.chevron_right, color: AppColors.textLight),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  void _showAvatarPicker() {
+    final List<IconData> spiritualAvatars = [
+      Icons.mosque_rounded,
+      Icons.menu_book_rounded,
+      Icons.volunteer_activism_rounded,
+      Icons.eco_rounded,
+      Icons.park_rounded,
+      Icons.wb_sunny_rounded,
+      Icons.nights_stay_rounded,
+      Icons.auto_awesome_rounded,
+    ];
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+      ),
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Manevi Avatar Seçin',
+              style: TextStyle(
+                color: AppColors.textDark,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 20),
+            GridView.builder(
+              shrinkWrap: true,
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 4,
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 16,
+              ),
+              itemCount: spiritualAvatars.length,
+              itemBuilder: (context, index) {
+                final icon = spiritualAvatars[index];
+                return GestureDetector(
+                  onTap: () async {
+                    final prefs = await SharedPreferences.getInstance();
+                    await prefs.setString(
+                        'user_avatar', icon.codePoint.toString());
+                    if (mounted) {
+                      Navigator.pop(context);
+                      _loadStats();
+                    }
+                  },
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryGreen.withOpacity(0.1),
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                          color: AppColors.primaryGreen.withOpacity(0.2)),
+                    ),
+                    child: Icon(icon, color: AppColors.primaryGreen, size: 30),
+                  ),
+                );
+              },
+            ),
+          ],
         ),
       ),
     );
@@ -348,30 +433,35 @@ class _ProfileHomeScreenState extends State<ProfileHomeScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppColors.surfaceDark,
+        backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Text(
-          "VİCDAN",
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          'VİCDAN',
+          style:
+              TextStyle(color: AppColors.textDark, fontWeight: FontWeight.bold),
           textAlign: TextAlign.center,
         ),
-        content: const Column(
+        content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              "Vicdan Arkadaşı",
-              style: TextStyle(color: Colors.white70),
+              'Vicdan Arkadaşı',
+              style: TextStyle(color: AppColors.textDark),
               textAlign: TextAlign.center,
             ),
             SizedBox(height: 16),
             Text(
-              "Versiyon 1.0.0",
-              style: TextStyle(color: Colors.white54, fontSize: 12),
+              'Versiyon 1.0.0',
+              style: TextStyle(
+                  color: AppColors.textDark.withOpacity(0.5), fontSize: 12),
             ),
             SizedBox(height: 8),
             Text(
-              "Adım adım, yaprak yaprak 🌿",
-              style: TextStyle(color: AppColors.sage, fontSize: 14),
+              'Adım adım, yaprak yaprak 🌿',
+              style: TextStyle(
+                  color: AppColors.primaryGreen,
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold),
               textAlign: TextAlign.center,
             ),
           ],
@@ -379,7 +469,7 @@ class _ProfileHomeScreenState extends State<ProfileHomeScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text("Tamam",
+            child: const Text('Tamam',
                 style: TextStyle(color: AppColors.goldenHour)),
           ),
         ],

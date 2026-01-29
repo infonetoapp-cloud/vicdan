@@ -75,6 +75,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       return;
     }
 
+    // Dismiss keyboard before any transition
+    FocusScope.of(context).unfocus();
+
     if (_pageIndex < 4) {
       _pageController.nextPage(
         duration: const Duration(milliseconds: 800),

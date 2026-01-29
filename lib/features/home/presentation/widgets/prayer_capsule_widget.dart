@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 
 class PrayerCapsuleWidget extends StatelessWidget {
-  final String nextPrayerName;
-  final String timeRemaining;
 
   const PrayerCapsuleWidget({
     super.key,
     required this.nextPrayerName,
     required this.timeRemaining,
   });
+  final String nextPrayerName;
+  final String timeRemaining;
 
   @override
   Widget build(BuildContext context) {
@@ -47,7 +47,7 @@ class PrayerCapsuleWidget extends StatelessWidget {
             text: TextSpan(
               children: [
                 TextSpan(
-                  text: "$nextPrayerName ",
+                  text: '$nextPrayerName ',
                   style: const TextStyle(
                     fontFamily: 'Inter',
                     color: AppColors.textDark,

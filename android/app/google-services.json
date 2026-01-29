@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "1056822098491",
+    "project_id": "vicdan-fb7e7",
+    "storage_bucket": "vicdan-fb7e7.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1056822098491:android:4259f6c69f0eeb36bbba1e",
+        "android_client_info": {
+          "package_name": "com.vicdan.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCYtWMvY2ccC0zLN8zDZBxt7nuYwCU069I"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1056822098491:android:3574637079dea12abbba1e",
+        "android_client_info": {
+          "package_name": "com.vicdan.vicdan_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCYtWMvY2ccC0zLN8zDZBxt7nuYwCU069I"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

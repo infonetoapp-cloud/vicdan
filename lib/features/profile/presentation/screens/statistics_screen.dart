@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../shared/widgets/sky_gradient_background.dart';
 import '../../../../shared/widgets/glass_card.dart';
+import '../../domain/entities/user_stats.dart';
 import '../../data/repositories/profile_repository_impl.dart';
 import '../../../tasks/data/repositories/task_repository_impl.dart';
 import '../../../tasks/data/datasources/local_task_datasource.dart';
@@ -19,6 +19,7 @@ class StatisticsScreen extends StatefulWidget {
 class _StatisticsScreenState extends State<StatisticsScreen> {
   late ProfileRepositoryImpl _profileRepo;
   List<Map<String, dynamic>> _scoreHistory = [];
+  UserStats? _stats;
   bool _isLoading = true;
 
   @override
@@ -33,10 +34,12 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
     _profileRepo = ProfileRepositoryImpl(taskRepo);
 
     final history = await _profileRepo.getHealthScoreHistory(14);
+    final stats = await _profileRepo.getUserStats();
 
     if (mounted) {
       setState(() {
         _scoreHistory = history;
+        _stats = stats;
         _isLoading = false;
       });
     }
@@ -48,22 +51,30 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         title: const Text(
-          "İstatistikler",
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          'İstatistikler',
+          style:
+              TextStyle(color: AppColors.textDark, fontWeight: FontWeight.bold),
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+          icon: const Icon(Icons.arrow_back_ios, color: AppColors.textDark),
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      body: SkyGradientBackground(
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+              colors: [AppColors.backgroundTop, AppColors.backgroundBottom],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter),
+        ),
         child: SafeArea(
           child: _isLoading
               ? const Center(
-                  child: CircularProgressIndicator(color: Colors.white))
+                  child:
+                      CircularProgressIndicator(color: AppColors.primaryGreen))
               : _buildContent(),
         ),
       ),
@@ -77,21 +88,21 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            "Vicdan Skoru Trendi",
+            'Vicdan Skoru Trendi',
             style: TextStyle(
-              color: Colors.white,
+              color: AppColors.textDark,
               fontSize: 18,
               fontWeight: FontWeight.bold,
             ),
           ),
           const SizedBox(height: 8),
           const Text(
-            "Son 14 günlük performansın",
-            style: TextStyle(color: Colors.white54, fontSize: 13),
+            'Son 14 günlük performansın',
+            style: TextStyle(color: AppColors.textDark, fontSize: 13),
           ),
           const SizedBox(height: 16),
           GlassCard(
-            opacity: 0.1,
+            opacity: 0.8,
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: SizedBox(
@@ -102,34 +113,47 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
           ),
           const SizedBox(height: 32),
           const Text(
-            "Özet",
+            'Özet',
             style: TextStyle(
-              color: Colors.white,
+              color: AppColors.textDark,
               fontSize: 18,
               fontWeight: FontWeight.bold,
             ),
           ),
           const SizedBox(height: 16),
-          _buildSummaryRow(),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            child: _buildSummaryRow(),
+          ),
           const SizedBox(height: 32),
           GlassCard(
-            opacity: 0.1,
+            opacity: 0.8,
             child: Padding(
               padding: const EdgeInsets.all(20),
               child: Column(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const Icon(Icons.menu_book_rounded,
-                      color: Colors.white54, size: 40),
+                      color: AppColors.primaryGreen, size: 40),
                   const SizedBox(height: 12),
                   const Text(
                     "Kur'an Okuma İstatistikleri",
-                    style: TextStyle(color: Colors.white70, fontSize: 14),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    "Yakında eklenecek...",
+                    textAlign: TextAlign.center,
                     style: TextStyle(
-                        color: Colors.white.withOpacity(0.4), fontSize: 12),
+                        color: AppColors.textDark,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Toplam Okuma Süresi: ${_isLoading ? '...' : _stats?.quranReadingMinutes ?? 0} Dakika',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                        color: AppColors.primaryGreen,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600),
                   ),
                 ],
               ),
@@ -143,13 +167,32 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
   Widget _buildLineChart() {
     if (_scoreHistory.isEmpty) {
       return const Center(
-        child: Text("Veri yok", style: TextStyle(color: Colors.white54)),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.analytics_outlined,
+                color: AppColors.primaryGreen, size: 48),
+            SizedBox(height: 16),
+            Text(
+              'Henüz veri toplanmadı',
+              style: TextStyle(
+                  color: AppColors.textDark,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600),
+            ),
+            SizedBox(height: 8),
+            Text(
+              'Görevlerini tamamladıkça burası yeşerecek 🌿',
+              style: TextStyle(color: AppColors.textLight, fontSize: 13),
+            ),
+          ],
+        ),
       );
     }
 
     final spots = _scoreHistory.asMap().entries.map((entry) {
       return FlSpot(
-          entry.key.toDouble(), (entry.value['score'] as int).toDouble());
+          entry.key.toDouble(), (entry.value['score'] as num).toDouble());
     }).toList();
 
     return LineChart(
@@ -160,7 +203,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
           horizontalInterval: 25,
           getDrawingHorizontalLine: (value) {
             return FlLine(
-              color: Colors.white.withOpacity(0.1),
+              color: AppColors.textDark.withOpacity(0.1),
               strokeWidth: 1,
             );
           },
@@ -174,7 +217,8 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
               getTitlesWidget: (value, meta) {
                 return Text(
                   value.toInt().toString(),
-                  style: const TextStyle(color: Colors.white54, fontSize: 10),
+                  style:
+                      const TextStyle(color: AppColors.textDark, fontSize: 10),
                 );
               },
             ),
@@ -189,11 +233,12 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                 if (index >= 0 && index < _scoreHistory.length) {
                   final date = _scoreHistory[index]['date'] as DateTime;
                   return Text(
-                    "${date.day}",
-                    style: const TextStyle(color: Colors.white54, fontSize: 10),
+                    '${date.day}',
+                    style: const TextStyle(
+                        color: AppColors.textDark, fontSize: 10),
                   );
                 }
-                return const Text("");
+                return const Text('');
               },
             ),
           ),
@@ -204,7 +249,9 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
         ),
         borderData: FlBorderData(show: false),
         minX: 0,
-        maxX: (_scoreHistory.length - 1).toDouble(),
+        maxX: _scoreHistory.length > 1
+            ? (_scoreHistory.length - 1).toDouble()
+            : 1.0,
         minY: 0,
         maxY: 100,
         lineBarsData: [
@@ -212,17 +259,17 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
             spots: spots,
             isCurved: true,
             curveSmoothness: 0.3,
-            color: AppColors.goldenHour,
-            barWidth: 3,
+            color: AppColors.primaryGreen,
+            barWidth: 4,
             isStrokeCapRound: true,
             dotData: FlDotData(
               show: true,
               getDotPainter: (spot, percent, barData, index) {
                 return FlDotCirclePainter(
                   radius: 4,
-                  color: AppColors.goldenHour,
+                  color: AppColors.primaryGreen,
                   strokeWidth: 2,
-                  strokeColor: Colors.white,
+                  strokeColor: AppColors.primaryGreen,
                 );
               },
             ),
@@ -230,8 +277,8 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
               show: true,
               gradient: LinearGradient(
                 colors: [
-                  AppColors.goldenHour.withOpacity(0.3),
-                  AppColors.goldenHour.withOpacity(0.0),
+                  AppColors.primaryGreen.withOpacity(0.3),
+                  AppColors.primaryGreen.withOpacity(0.0),
                 ],
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
@@ -245,31 +292,37 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
 
   Widget _buildSummaryRow() {
     final average = _scoreHistory.isNotEmpty
-        ? _scoreHistory.map((e) => e['score'] as int).reduce((a, b) => a + b) ~/
+        ? _scoreHistory
+                .map((e) => (e['score'] as num).toInt())
+                .reduce((a, b) => a + b) ~/
             _scoreHistory.length
         : 0;
 
     final bestDay = _scoreHistory.isNotEmpty
-        ? _scoreHistory.reduce((a, b) =>
-            (a['score'] as int) > (b['score'] as int) ? a : b)['score']
+        ? _scoreHistory
+            .map((e) => (e['score'] as num).toInt())
+            .reduce((a, b) => a > b ? a : b)
         : 0;
 
     return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Expanded(
+        ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 160),
           child: _buildSummaryCard(
             icon: Icons.trending_up,
-            label: "Ortalama",
-            value: "$average",
+            label: 'Ortalama',
+            value: '$average',
             color: AppColors.sage,
           ),
         ),
         const SizedBox(width: 12),
-        Expanded(
+        ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 160),
           child: _buildSummaryCard(
             icon: Icons.star,
-            label: "En İyi Gün",
-            value: "$bestDay",
+            label: 'En İyi Gün',
+            value: '$bestDay',
             color: AppColors.goldenHour,
           ),
         ),
@@ -284,29 +337,34 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
     required Color color,
   }) {
     return GlassCard(
-      opacity: 0.1,
+      opacity: 0.8,
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Row(
           children: [
             Icon(icon, color: color, size: 28),
             const SizedBox(width: 12),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  value,
-                  style: TextStyle(
-                    color: color,
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
+            Flexible(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    value,
+                    style: TextStyle(
+                      color: color,
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
-                Text(
-                  label,
-                  style: const TextStyle(color: Colors.white54, fontSize: 12),
-                ),
-              ],
+                  Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                        color: AppColors.textDark, fontSize: 12),
+                  ),
+                ],
+              ),
             ),
           ],
         ),

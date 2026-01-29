@@ -12,15 +12,18 @@ import '../../../../core/services/location_service.dart';
 import '../../../prayer/data/repositories/prayer_times_repository.dart';
 import '../widgets/task_list_card.dart';
 import '../widgets/vicdan_score_card.dart';
-import '../widgets/placeholder_tab.dart';
 import '../../../prayer/presentation/screens/prayer_screen.dart';
 import '../../../quran/presentation/screens/quran_screen.dart';
 import '../../../tasks/presentation/screens/task_history_screen.dart';
-import 'daily_summary_screen.dart';
 import '../../../../features/journey/presentation/screens/journey_screen.dart';
+import '../../../../features/profile/presentation/screens/settings_screen.dart';
 import '../../../../features/profile/presentation/screens/profile_home_screen.dart';
 import '../widgets/mood_bubbles_widget.dart';
 import '../widgets/prayer_capsule_widget.dart';
+import 'package:vicdan_app/features/social/presentation/screens/prayer_feed_screen.dart';
+import 'package:flutter/services.dart'; // For SystemNavigator
+import '../../../tasks/presentation/screens/spiritual_focus_screen.dart';
+import '../../../../core/services/adhan_notification_service.dart';
 
 /// Main Home Screen with Tree Tab
 class HomeScreen extends StatefulWidget {
@@ -77,9 +80,21 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
 
     _initRepository();
-    _initLocationAndPrayer();
+    // Force refresh to update location name format (District priority)
+    _initLocationAndPrayer(forceRefresh: true);
     _startTimer();
+    _initNotifications();
   }
+
+  Future<void> _initNotifications() async {
+    // Permission request delay to arguably improve UX (don't blast immediately)
+    await Future.delayed(const Duration(seconds: 2));
+    if (mounted) {
+      await AdhanNotificationService().initialize();
+    }
+  }
+
+  DateTime? _lastBackPressTime;
 
   @override
   void dispose() {
@@ -200,17 +215,25 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
       // Display Logic: "Şehir değil, ilçe yazsın"
       String displayLoc = '';
+
+      // 1. Priority: District (Ilçe)
       if (district.isNotEmpty && district.toLowerCase() != 'merkez') {
-        displayLoc = district; // Show JUST "Darıca"
+        displayLoc = district;
+      }
+      // 2. Fallback: Neighborhood (Mahalle) if District is missing/Merkez
+      else if (details['neighborhood'] != null &&
+          details['neighborhood']!.isNotEmpty) {
+        displayLoc = details['neighborhood']!;
+      }
+      // 3. Fallback: City (Sehir)
+      else if (city.isNotEmpty) {
+        displayLoc = city;
       } else {
-        // If "Merkez" or empty, show "Kocaeli Merkez"
-        displayLoc = '$city Merkez';
+        displayLoc = 'Bilinmeyen Konum';
       }
 
-      // Safety: If still empty (no city even), shows Bilinmeyen
-      if (displayLoc.trim() == 'Merkez') displayLoc = 'Bilinmeyen Konum';
-      if (displayLoc.trim().isEmpty)
-        displayLoc = city.isNotEmpty ? '$city Merkez' : 'Konum Alınamadı';
+      // Final clean up
+      if (displayLoc.trim().isEmpty) displayLoc = 'Konum Alınamadı';
 
       // 3. Save to Cache
       await prefs.setDouble('latitude', position.latitude);
@@ -263,29 +286,33 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       final confirmed = await showDialog<bool>(
         context: context,
         builder: (context) => AlertDialog(
-          backgroundColor: AppColors.surfaceCard,
+          backgroundColor: Colors.white,
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           title: const Text(
             'Vicdan Muhasebesi',
-            style: TextStyle(color: Colors.white, fontSize: 18),
+            style: TextStyle(
+                color: AppColors.textDark,
+                fontSize: 18,
+                fontWeight: FontWeight.bold),
           ),
           content: const Text(
             'Bu görevi gerçekten kalben ve bedenen yerine getirdin mi?\n\nVicdanın rahat mı?',
-            style: TextStyle(color: Colors.white70),
+            style: TextStyle(color: AppColors.textLight, fontSize: 15),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false), // Cancel
-              child: const Text('Henüz Değil',
-                  style: TextStyle(color: Colors.white54)),
+              child: Text('Henüz Değil',
+                  style:
+                      TextStyle(color: AppColors.textLight.withOpacity(0.7))),
             ),
             TextButton(
               onPressed: () => Navigator.pop(context, true), // Confirm
               child: const Text(
                 'Evet, Huzurluyum',
                 style: TextStyle(
-                    color: AppColors.goldenHour, fontWeight: FontWeight.bold),
+                    color: AppColors.primaryGreen, fontWeight: FontWeight.bold),
               ),
             ),
           ],
@@ -375,201 +402,250 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         currentScreen = const QuranScreen();
         break;
       case 3:
-        currentScreen = const PlaceholderTab(title: 'Görevler (Yakında)');
+        currentScreen = const SpiritualFocusScreen();
         break;
       case 4:
         currentScreen = const ProfileHomeScreen();
+        break;
+      case 5:
+        currentScreen = const PrayerFeedScreen();
         break;
       default:
         currentScreen = _buildHomeTab();
     }
 
     // Force strict light theme gradient background
-    return Scaffold(
-      key: _scaffoldKey,
-      backgroundColor: AppColors.backgroundTop,
-      body: Stack(
-        children: [
-          // 0. Background Gradient (Global)
-          Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [AppColors.backgroundTop, AppColors.backgroundBottom],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
+    return PopScope(
+        canPop: false,
+        onPopInvoked: (didPop) {
+          if (didPop) return;
+
+          if (_isDrawerOpen) {
+            _toggleDrawer();
+            return;
+          }
+
+          if (_currentTabIndex != 0) {
+            setState(() => _currentTabIndex = 0);
+            return;
+          }
+
+          final now = DateTime.now();
+          if (_lastBackPressTime == null ||
+              now.difference(_lastBackPressTime!) >
+                  const Duration(seconds: 2)) {
+            _lastBackPressTime = now;
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text("Çıkmak için tekrar basın",
+                    style: TextStyle(color: Colors.white)),
+                duration: Duration(seconds: 2),
+                backgroundColor: AppColors.textDark,
               ),
-            ),
-          ),
-
-          // 1. The Glass Menu (Background Layer)
-          SafeArea(child: _buildMenuContent()),
-
-          // 2. The Main Screen (Foreground Layer)
-          AnimatedContainer(
-            transform: Matrix4.translationValues(_xOffset, _yOffset, 0)
-              ..scale(_scaleFactor)
-              ..rotateZ(_angle),
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeOutCubic,
-            decoration: BoxDecoration(
-              color: Colors.white, // Canvas color for the screen content
-              borderRadius: BorderRadius.circular(_isDrawerOpen ? 30 : 0),
-              boxShadow: [
-                if (_isDrawerOpen)
-                  BoxShadow(
-                    color: AppColors.glassShadow.withOpacity(0.2),
-                    blurRadius: 30,
-                    offset: const Offset(-10, 10),
+            );
+          } else {
+            SystemNavigator.pop();
+          }
+        },
+        child: Scaffold(
+          key: _scaffoldKey,
+          backgroundColor: AppColors.backgroundTop,
+          body: Stack(
+            children: [
+              // 0. Background Gradient (Global)
+              Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      AppColors.backgroundTop,
+                      AppColors.backgroundBottom
+                    ],
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
                   ),
-              ],
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(_isDrawerOpen ? 30 : 0),
-              // We wrap the content in Scaffold/SafeArea logic internally
-              child: Scaffold(
-                backgroundColor:
-                    Colors.transparent, // Transparent to show container color
-                body: Stack(
-                  children: [
-                    // Screen Content
-                    SafeArea(
-                      bottom: false,
-                      child: Column(
-                        children: [
-                          // Custom Header (Only show if we are NOT on a screen that has its own app bar,
-                          // strictly usually Home has this custom header.
-                          // For simplicity, we keep the header logic if index == 0, else generic app bar?)
-                          // User wants "Tuşsuz" flow. Let's keep the header accessible everywhere
-                          // or let screens define it.
-                          // For now, let's inject our Menu Button into the currentScreen if possible,
-                          // OR keep the header always at top.
+                ),
+              ),
 
-                          if (_currentTabIndex == 0) ...[
-                            Padding(
-                              padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
-                              child: _buildHeader(),
-                            ),
-                          ] else ...[
-                            // For other screens, we need a way to open drawer.
-                            // Adding a custom small header or ensuring screens have it.
-                            Padding(
-                              padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
-                              child: Row(
-                                children: [
-                                  GlassIconButton(
-                                    icon: _isDrawerOpen
-                                        ? Icons.arrow_back
-                                        : Icons.grid_view_rounded,
-                                    onTap: _toggleDrawer,
-                                    size: 44,
-                                    iconSize: 22,
-                                  ),
-                                  const Spacer(),
-                                  // Maybe Title?
-                                ],
-                              ),
-                            ),
-                          ],
+              // 1. The Glass Menu (Background Layer)
+              SafeArea(child: _buildMenuContent()),
 
-                          // The Screen Body
-                          Expanded(child: currentScreen),
-                        ],
-                      ),
-                    ),
-
-                    // Glass Overlay to prevent interaction when drawer is open
+              // 2. The Main Screen (Foreground Layer)
+              AnimatedContainer(
+                transform: Matrix4.translationValues(_xOffset, _yOffset, 0)
+                  ..scale(_scaleFactor)
+                  ..rotateZ(_angle),
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeOutCubic,
+                decoration: BoxDecoration(
+                  color: Colors.white, // Canvas color for the screen content
+                  borderRadius: BorderRadius.circular(_isDrawerOpen ? 30 : 0),
+                  boxShadow: [
                     if (_isDrawerOpen)
-                      GestureDetector(
-                        onTap: _toggleDrawer,
-                        child: Container(
-                          color: Colors.transparent,
-                        ),
+                      BoxShadow(
+                        color: AppColors.glassShadow.withOpacity(0.2),
+                        blurRadius: 30,
+                        offset: const Offset(-10, 10),
                       ),
                   ],
                 ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(_isDrawerOpen ? 30 : 0),
+                  // We wrap the content in Scaffold/SafeArea logic internally
+                  child: Scaffold(
+                    backgroundColor: Colors
+                        .transparent, // Transparent to show container color
+                    body: Stack(
+                      children: [
+                        // Screen Content
+                        SafeArea(
+                          bottom: false,
+                          child: Column(
+                            children: [
+                              // Custom Header (Only show if we are NOT on a screen that has its own app bar,
+                              // strictly usually Home has this custom header.
+                              // For simplicity, we keep the header logic if index == 0, else generic app bar?)
+                              // User wants "Tuşsuz" flow. Let's keep the header accessible everywhere
+                              // or let screens define it.
+                              // For now, let's inject our Menu Button into the currentScreen if possible,
+                              // OR keep the header always at top.
+
+                              if (_currentTabIndex == 0) ...[
+                                Padding(
+                                  padding:
+                                      const EdgeInsets.fromLTRB(20, 8, 20, 0),
+                                  child: _buildHeader(),
+                                ),
+                              ] else ...[
+                                // For other screens, we need a way to open drawer.
+                                // Adding a custom small header or ensuring screens have it.
+                                Padding(
+                                  padding:
+                                      const EdgeInsets.fromLTRB(20, 8, 20, 0),
+                                  child: Row(
+                                    children: [
+                                      GlassIconButton(
+                                        icon: _isDrawerOpen
+                                            ? Icons.arrow_back
+                                            : Icons.grid_view_rounded,
+                                        onTap: _toggleDrawer,
+                                        size: 44,
+                                        iconSize: 22,
+                                      ),
+                                      const Spacer(),
+                                      // Maybe Title?
+                                    ],
+                                  ),
+                                ),
+                              ],
+
+                              // The Screen Body
+                              Expanded(child: currentScreen),
+                            ],
+                          ),
+                        ),
+
+                        // Glass Overlay to prevent interaction when drawer is open
+                        if (_isDrawerOpen)
+                          GestureDetector(
+                            onTap: _toggleDrawer,
+                            child: Container(
+                              color: Colors.transparent,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
               ),
-            ),
+            ],
           ),
-        ],
-      ),
-    );
+        ));
   }
 
   // Refactored Menu Content (Background Layer)
   Widget _buildMenuContent() {
-    return Padding(
-      padding: const EdgeInsets.only(left: 20, top: 40, bottom: 40),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Menu Header
-          Row(
+    return SingleChildScrollView(
+      physics: const ClampingScrollPhysics(), // Prevent bounce if not needed
+      child: Container(
+        height: MediaQuery.of(context).size.height, // Force full height
+        padding: const EdgeInsets.only(left: 20, top: 20, bottom: 20),
+        child: SafeArea(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 50,
-                height: 50,
-                decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.9),
-                    shape: BoxShape.circle,
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Colors.black12,
-                        blurRadius: 10,
-                        offset: Offset(0, 4),
-                      )
-                    ]),
-                child:
-                    const Icon(Icons.favorite, color: AppColors.primaryGreen),
-              ),
-              const SizedBox(width: 12),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              // Menu Header
+              Row(
                 children: [
-                  const Text(
-                    "VİCDAN",
-                    style: TextStyle(
-                        color: AppColors.textDark,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 22,
-                        fontFamily:
-                            'Playfair Display' // Assuming font exists or fallback
+                  Container(
+                    width: 50,
+                    height: 50,
+                    decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.9),
+                        shape: BoxShape.circle,
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Colors.black12,
+                            blurRadius: 10,
+                            offset: Offset(0, 4),
+                          )
+                        ]),
+                    child: const Icon(Icons.favorite,
+                        color: AppColors.primaryGreen),
+                  ),
+                  const SizedBox(width: 12),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        "VİCDAN",
+                        style: TextStyle(
+                            color: AppColors.textDark,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 22,
+                            fontFamily:
+                                'Playfair Display' // Assuming font exists or fallback
+                            ),
+                      ),
+                      Text(
+                        "Hoş Geldin, Sinan",
+                        style: TextStyle(
+                          color: AppColors.textDark.withOpacity(0.6),
+                          fontSize: 14,
                         ),
-                  ),
-                  Text(
-                    "Hoş Geldin, Sinan",
-                    style: TextStyle(
-                      color: AppColors.textDark.withOpacity(0.6),
-                      fontSize: 14,
-                    ),
-                  ),
+                      ),
+                    ],
+                  )
                 ],
-              )
+              ),
+
+              const SizedBox(height: 40),
+
+              // Menu Items
+              // Menu Items
+              _buildMenuItem(Icons.park_rounded, "Yaşam Alanı", 0),
+              _buildMenuItem(Icons.mosque_rounded, "Namaz Vakti", 1),
+              _buildMenuItem(Icons.menu_book_rounded, "Kur'an-ı Kerim", 2),
+              _buildMenuItem(Icons.spa_rounded, "Manevi Odak", 3),
+              _buildMenuItem(
+                  Icons.volunteer_activism_rounded, "Gönül Bağları", 5),
+
+              // Actions in main flow
+              _buildMenuAction(Icons.map_rounded, "Ramazan Yolculuğu", () {
+                _toggleDrawer();
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (_) => const JourneyScreen()));
+              }),
+
+              const Spacer(), // Pushes Profile to bottom
+
+              // Footer / System
+              _buildMenuItem(
+                  Icons.person_outline_rounded, "Profil & Ayarlar", 4),
+
+              const SizedBox(height: 20), // Safety padding
             ],
           ),
-
-          const Spacer(flex: 1),
-
-          // Menu Items
-          _buildMenuItem(Icons.park_rounded, "Yaşam Alanı", 0),
-          _buildMenuItem(Icons.mosque_rounded, "Namaz Vakti", 1),
-          _buildMenuItem(Icons.menu_book_rounded, "Kur'an-ı Kerim", 2),
-          _buildMenuItem(Icons.check_circle_outline_rounded, "Görevler", 3),
-          _buildMenuItem(Icons.person_outline_rounded, "Profil & Ayarlar", 4),
-
-          const Spacer(flex: 2),
-
-          // Footer Actions
-          _buildMenuAction(Icons.map_rounded, "30 Günlük Yolculuk", () {
-            _toggleDrawer();
-            Navigator.push(context,
-                MaterialPageRoute(builder: (_) => const JourneyScreen()));
-          }),
-          _buildMenuAction(Icons.calendar_today_rounded, "Günlük Özet", () {
-            _toggleDrawer();
-            Navigator.push(context,
-                MaterialPageRoute(builder: (_) => const DailySummaryScreen()));
-          }),
-        ],
+        ),
       ),
     );
   }
@@ -626,12 +702,16 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           children: [
             Icon(icon, color: AppColors.textDark.withOpacity(0.5), size: 20),
             const SizedBox(width: 12),
-            Text(
-              title,
-              style: TextStyle(
-                color: AppColors.textDark.withOpacity(0.5),
-                fontWeight: FontWeight.w500,
-                fontSize: 15,
+            Expanded(
+              child: Text(
+                title,
+                style: TextStyle(
+                  color: AppColors.textDark.withOpacity(0.5),
+                  fontWeight: FontWeight.w500,
+                  fontSize: 15,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
           ],
@@ -645,14 +725,21 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     return Column(
       children: [
         // Tree Area (Living Sanctuary)
+        // Mood Capsules (Placed above the tree to avoid overlap)
+        const Padding(
+          padding: EdgeInsets.only(top: 4, bottom: 0), // Tightened top padding
+          child: MoodBubblesWidget(),
+        ),
+
+        // Tree Area (Living Sanctuary)
         Expanded(
-          flex: 5, // Increased space for the tree & bubbles
+          flex: 5, // Reduced from 6 to give more space to cards
           child: Stack(
-            alignment: Alignment.center,
+            alignment: Alignment.topCenter, // Lift tree up
             children: [
-              // 1. The Tree
+              // 1. The Tree (Moved Up)
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
+                padding: const EdgeInsets.only(top: 10, left: 20, right: 20),
                 child: ScaleTransition(
                   scale: _treeScaleAnimation,
                   child: LottieTreeWidget(
@@ -665,10 +752,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 ),
               ),
 
-              // 2. Mood Bubbles (Floating around)
-              const MoodBubblesWidget(),
-
-              // 3. Prayer Capsule (Dynamic Island at Bottom)
+              // 2. Prayer Capsule (Dynamic Island at Bottom)
               Positioned(
                 bottom: 0,
                 child: PrayerCapsuleWidget(
@@ -681,23 +765,25 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         ),
 
         // Cards Area
+        // Cards Area (Scrollable to prevent overflow)
         Expanded(
-          flex: 5,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Column(
-              children: [
-                // Vicdan Score Card (Simplified)
-                VicDanScoreCard(
-                  score: _healthScore,
-                  streak: _streak,
-                  nextPrayer: _nextPrayerInfo,
-                ),
-                const SizedBox(height: 12),
+          flex: 7, // Increased from 5 to 7. Major space boost.
+          child: SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              child: Column(
+                children: [
+                  // Vicdan Score Card (Simplified)
+                  VicDanScoreCard(
+                    score: _healthScore,
+                    streak: _streak,
+                    nextPrayer: _nextPrayerInfo,
+                  ),
+                  const SizedBox(height: 12),
 
-                // Task List Card
-                Expanded(
-                  child: _isLoading
+                  // Task List Card
+                  _isLoading
                       ? const Center(
                           child: CircularProgressIndicator(
                               color: AppColors.primaryGreen))
@@ -714,8 +800,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             );
                           },
                         ),
-                ),
-              ],
+                  // Extra padding for bottom safety
+                  const SizedBox(height: 10),
+                ],
+              ),
             ),
           ),
         ),
@@ -818,7 +906,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         // Notification Button
         GlassIconButton(
           icon: Icons.notifications_none_rounded,
-          onTap: () {},
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const SettingsScreen()),
+            );
+          },
           size: 44,
           iconSize: 22,
         ),

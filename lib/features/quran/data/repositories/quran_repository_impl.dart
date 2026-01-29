@@ -13,9 +13,9 @@ import '../datasources/quran_local_datasource.dart';
 /// - Converts data models to domain entities
 /// - Adds business logic (filtering, validation, etc.)
 class QuranRepositoryImpl implements QuranRepository {
-  final QuranLocalDataSource _dataSource;
 
   QuranRepositoryImpl(this._dataSource);
+  final QuranLocalDataSource _dataSource;
 
   @override
   Future<List<Surah>> getAllSurahs() async {

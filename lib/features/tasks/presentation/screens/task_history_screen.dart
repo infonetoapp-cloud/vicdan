@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../shared/widgets/sky_gradient_background.dart';
 import '../../../../shared/widgets/glass_card.dart';
 import '../../domain/repositories/task_repository.dart';
 import '../../data/repositories/task_repository_impl.dart';
 import '../../data/datasources/local_task_datasource.dart';
 import '../../domain/entities/task_history_entity.dart';
+import 'dart:async';
 
 class TaskHistoryScreen extends StatefulWidget {
   const TaskHistoryScreen({super.key});
@@ -18,6 +18,7 @@ class _TaskHistoryScreenState extends State<TaskHistoryScreen> {
   late final TaskRepository _repository;
   List<TaskHistoryEntity> _history = [];
   bool _isLoading = true;
+  int _todayScore = 0;
 
   @override
   void initState() {
@@ -29,9 +30,12 @@ class _TaskHistoryScreenState extends State<TaskHistoryScreen> {
 
   Future<void> _loadHistory() async {
     final history = await _repository.getHistory(30);
+    final todayScore = await _repository.calculateDailyScore();
+
     if (mounted) {
       setState(() {
         _history = history;
+        _todayScore = todayScore;
         _isLoading = false;
       });
     }
@@ -44,47 +48,58 @@ class _TaskHistoryScreenState extends State<TaskHistoryScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text("İstikrar Tablosu",
-            style: TextStyle(color: Colors.white)),
+        title: const Text('İstikrar Tablosu',
+            style: TextStyle(
+                color: AppColors.textDark, fontWeight: FontWeight.bold)),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+          icon: const Icon(Icons.arrow_back_ios, color: AppColors.textDark),
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      body: SkyGradientBackground(
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [AppColors.backgroundTop, AppColors.backgroundBottom],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
         child: SafeArea(
           child: _isLoading
               ? const Center(
-                  child: CircularProgressIndicator(color: Colors.white))
+                  child:
+                      CircularProgressIndicator(color: AppColors.primaryGreen))
               : Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
                     children: [
                       // Summary Card
                       GlassCard(
+                        opacity: 0.8,
                         child: Column(
                           children: [
                             const Text(
-                              "Son 30 Gün",
+                              'Son 30 Gün',
                               style: TextStyle(
-                                color: Colors.white70,
+                                color: AppColors.textLight,
                                 fontSize: 14,
                               ),
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              "${_calculateAverageScore()}%",
+                              '${_calculateAverageScore()}%',
                               style: const TextStyle(
-                                color: AppColors.goldenHour,
+                                color: AppColors.primaryGreen,
                                 fontSize: 32,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
                             const Text(
-                              "Ortalama Başarı",
+                              'Ortalama Başarı',
                               style: TextStyle(
-                                color: Colors.white,
+                                color: AppColors.textDark,
                                 fontSize: 12,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
                           ],
@@ -113,7 +128,7 @@ class _TaskHistoryScreenState extends State<TaskHistoryScreen> {
                             final date = DateTime.now()
                                 .subtract(Duration(days: 29 - index));
                             final dateStr =
-                                "${date.year}-${date.month}-${date.day}";
+                                '${date.year}-${date.month}-${date.day}';
 
                             final historyItem = _history.firstWhere(
                                 (h) => h.date == dateStr,
@@ -136,26 +151,39 @@ class _TaskHistoryScreenState extends State<TaskHistoryScreen> {
   }
 
   int _calculateAverageScore() {
-    if (_history.isEmpty) return 0;
-    final sum = _history.fold(0, (prev, element) => prev + element.totalScore);
-    return (sum / _history.length).round();
+    // Include today's score in average calculation
+    final historyScores = _history.map((e) => e.totalScore).toList();
+    historyScores.add(_todayScore);
+
+    if (historyScores.isEmpty) return 0;
+    final sum = historyScores.reduce((a, b) => a + b);
+    return (sum / historyScores.length).round();
   }
 
   Widget _buildDayCell(TaskHistoryEntity item, DateTime date) {
-    final score = item.totalScore;
-    Color color = Colors.white.withOpacity(0.05); // Default empty
+    var score = item.totalScore;
 
-    if (score > 0) {
-      if (score < 40)
-        color = Colors.green.withOpacity(0.3);
-      else if (score < 70)
-        color = Colors.green.withOpacity(0.6);
-      else
-        color = Colors.green;
+    // If this is today, override with live score
+    final isToday = date.day == DateTime.now().day &&
+        date.month == DateTime.now().month &&
+        date.year == DateTime.now().year;
+
+    if (isToday) {
+      score = _todayScore;
     }
 
-    final isToday =
-        date.day == DateTime.now().day && date.month == DateTime.now().month;
+    Color color = AppColors.primaryGreen.withOpacity(0.05); // Default empty
+
+    if (score > 0) {
+      if (score < 40) {
+        color = AppColors.primaryGreen.withOpacity(0.2);
+      } else if (score < 70)
+        color = AppColors.primaryGreen.withOpacity(0.5);
+      else
+        color = AppColors.primaryGreen;
+    }
+
+    // Today logic handled above in score assignment
 
     return Container(
       decoration: BoxDecoration(
@@ -166,10 +194,13 @@ class _TaskHistoryScreenState extends State<TaskHistoryScreen> {
       ),
       child: Center(
         child: Text(
-          "${date.day}",
+          '${date.day}',
           style: TextStyle(
-            color: Colors.white.withOpacity(score > 0 ? 1 : 0.5),
-            fontWeight: FontWeight.bold,
+            color: score > 70
+                ? Colors.white
+                : AppColors.textDark.withOpacity(score > 0 ? 1 : 0.4),
+            fontSize: 12,
+            fontWeight: score > 0 ? FontWeight.bold : FontWeight.normal,
           ),
         ),
       ),

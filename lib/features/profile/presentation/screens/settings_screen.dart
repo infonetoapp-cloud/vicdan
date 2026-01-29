@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../shared/widgets/sky_gradient_background.dart';
 import '../../../../shared/widgets/glass_card.dart';
 import '../../../../core/services/adhan_notification_service.dart';
 
@@ -62,25 +61,33 @@ class _SettingsScreenState extends State<SettingsScreen> {
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         title: const Text(
-          "Ayarlar",
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          'Ayarlar',
+          style:
+              TextStyle(color: AppColors.textDark, fontWeight: FontWeight.bold),
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+          icon: const Icon(Icons.arrow_back_ios, color: AppColors.textDark),
           onPressed: () {
             _adhanService.stopAdhan();
             Navigator.pop(context);
           },
         ),
       ),
-      body: SkyGradientBackground(
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+              colors: [AppColors.backgroundTop, AppColors.backgroundBottom],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter),
+        ),
         child: SafeArea(
           child: _isLoading
               ? const Center(
-                  child: CircularProgressIndicator(color: Colors.white))
+                  child:
+                      CircularProgressIndicator(color: AppColors.primaryGreen))
               : _buildContent(),
         ),
       ),
@@ -94,19 +101,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // SECTION: EZAN
-          _buildSectionTitle("🕌 Ezan"),
+          _buildSectionTitle('🕌 Ezan'),
           const SizedBox(height: 12),
           _buildAdhanSection(),
 
           const SizedBox(height: 32),
 
           // SECTION: Notifications
-          _buildSectionTitle("Bildirimler"),
+          _buildSectionTitle('Bildirimler'),
           const SizedBox(height: 12),
           _buildToggleTile(
             icon: Icons.mosque_rounded,
-            title: "Namaz Vakti Bildirimleri",
-            subtitle: "Ezan vaktinde hatırlatma al",
+            title: 'Namaz Vakti Bildirimleri',
+            subtitle: 'Ezan vaktinde hatırlatma al',
             value: _prayerNotifications,
             onChanged: (val) {
               setState(() => _prayerNotifications = val);
@@ -116,8 +123,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const SizedBox(height: 12),
           _buildToggleTile(
             icon: Icons.task_alt_rounded,
-            title: "Görev Hatırlatıcı",
-            subtitle: "Günlük görev hatırlatması",
+            title: 'Görev Hatırlatıcı',
+            subtitle: 'Günlük görev hatırlatması',
             value: _taskReminders,
             onChanged: (val) {
               setState(() => _taskReminders = val);
@@ -127,33 +134,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
           const SizedBox(height: 32),
 
-          // SECTION: Data
-          _buildSectionTitle("Veri Yönetimi"),
-          const SizedBox(height: 12),
-          _buildActionTile(
-            icon: Icons.file_download_outlined,
-            title: "Veriyi Dışa Aktar",
-            subtitle: "Tüm verini JSON olarak indir",
-            onTap: _exportData,
-          ),
-          const SizedBox(height: 12),
-          _buildActionTile(
-            icon: Icons.delete_forever_rounded,
-            title: "Tüm Verileri Sil",
-            subtitle: "Dikkat: Bu işlem geri alınamaz",
-            isDestructive: true,
-            onTap: _confirmDeleteData,
-          ),
-
           const SizedBox(height: 32),
 
+          // SECTION: Legal
+          _buildLegalSection(),
+
           // SECTION: About
-          _buildSectionTitle("Hakkında"),
+          _buildSectionTitle('Hakkında'),
           const SizedBox(height: 12),
           _buildInfoTile(
             icon: Icons.info_outline,
-            title: "Versiyon",
-            value: "1.0.0",
+            title: 'Versiyon',
+            value: '1.0.0',
           ),
         ],
       ),
@@ -163,7 +155,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   /// Builds the Adhan section with master toggle, sound picker, and per-prayer toggles.
   Widget _buildAdhanSection() {
     return GlassCard(
-      opacity: 0.15,
+      opacity: 0.9,
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -187,16 +179,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        "Ezan Vakitlerinde Ezan Okusun",
+                        'Ezan Vakitlerinde Ezan Okusun',
                         style: TextStyle(
-                          color: Colors.white,
+                          color: AppColors.textDark,
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
                       Text(
-                        "Telefon sessizde ise çalmaz",
-                        style: TextStyle(color: Colors.white54, fontSize: 12),
+                        'Telefon sessizde ise çalmaz',
+                        style:
+                            TextStyle(color: AppColors.textLight, fontSize: 12),
                       ),
                     ],
                   ),
@@ -207,7 +200,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     setState(() => _adhanEnabled = val);
                     await _adhanService.setAdhanEnabled(val);
                   },
-                  activeColor: AppColors.goldenHour,
+                  activeThumbColor: AppColors.goldenHour,
                   activeTrackColor: AppColors.goldenHour.withOpacity(0.5),
                 ),
               ],
@@ -221,9 +214,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
               // Sound Selection
               const Text(
-                "Ezan Sesi Seçin",
+                'Ezan Sesi Seçin',
                 style: TextStyle(
-                  color: Colors.white70,
+                  color: AppColors.textDark,
                   fontSize: 13,
                   fontWeight: FontWeight.w500,
                 ),
@@ -237,9 +230,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
               // Per-Prayer Toggles
               const Text(
-                "Hangi vakitlerde çalsın?",
+                'Hangi vakitlerde çalsın?',
                 style: TextStyle(
-                  color: Colors.white70,
+                  color: AppColors.textDark,
                   fontSize: 13,
                   fontWeight: FontWeight.w500,
                 ),
@@ -273,13 +266,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           decoration: BoxDecoration(
             color: isSelected
-                ? AppColors.goldenHour.withOpacity(0.2)
-                : Colors.white.withOpacity(0.05),
+                ? AppColors.primaryGreen.withOpacity(0.1)
+                : Colors.grey.shade50,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: isSelected
-                  ? AppColors.goldenHour.withOpacity(0.5)
-                  : Colors.transparent,
+              color: isSelected ? AppColors.primaryGreen : Colors.grey.shade300,
             ),
           ),
           child: Row(
@@ -291,7 +282,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: isSelected ? AppColors.goldenHour : Colors.white54,
+                    color: isSelected ? AppColors.primaryGreen : Colors.grey,
                     width: 2,
                   ),
                 ),
@@ -301,7 +292,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           width: 10,
                           height: 10,
                           decoration: const BoxDecoration(
-                            color: AppColors.goldenHour,
+                            color: AppColors.primaryGreen,
                             shape: BoxShape.circle,
                           ),
                         ),
@@ -318,7 +309,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     Text(
                       adhan.name,
                       style: TextStyle(
-                        color: isSelected ? Colors.white : Colors.white70,
+                        color: isSelected
+                            ? AppColors.primaryGreen
+                            : AppColors.textDark,
                         fontSize: 14,
                         fontWeight:
                             isSelected ? FontWeight.w600 : FontWeight.w400,
@@ -327,8 +320,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     if (adhan.description != null)
                       Text(
                         adhan.description!,
-                        style: const TextStyle(
-                            color: Colors.white38, fontSize: 11),
+                        style: TextStyle(
+                            color: AppColors.textDark.withOpacity(0.5),
+                            fontSize: 11),
                       ),
                   ],
                 ),
@@ -337,8 +331,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
               // Preview Button
               IconButton(
                 icon: Icon(
-                  isPreviewing ? Icons.stop_rounded : Icons.play_arrow_rounded,
-                  color: isPreviewing ? AppColors.goldenHour : Colors.white54,
+                  isPreviewing
+                      ? Icons.stop_circle_rounded
+                      : Icons.play_circle_fill_rounded,
+                  color:
+                      isPreviewing ? Colors.redAccent : AppColors.primaryGreen,
+                  size: 28,
                 ),
                 onPressed: () async {
                   if (isPreviewing) {
@@ -354,7 +352,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content:
-                                Text("Ses dosyası bulunamadı: ${adhan.name}"),
+                                Text('Ses dosyası bulunamadı: ${adhan.name}'),
                             backgroundColor: Colors.orangeAccent,
                           ),
                         );
@@ -383,7 +381,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           Expanded(
             child: Text(
               name,
-              style: const TextStyle(color: Colors.white, fontSize: 14),
+              style: const TextStyle(color: AppColors.textDark, fontSize: 14),
             ),
           ),
           SizedBox(
@@ -394,7 +392,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 setState(() => _prayerAdhanSettings[key] = val);
                 await _adhanService.setPrayerAdhanEnabled(key, val);
               },
-              activeColor: AppColors.sage,
+              activeThumbColor: AppColors.sage,
               activeTrackColor: AppColors.sage.withOpacity(0.5),
             ),
           ),
@@ -423,12 +421,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
     required ValueChanged<bool> onChanged,
   }) {
     return GlassCard(
-      opacity: 0.1,
+      opacity: 0.9,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
           children: [
-            Icon(icon, color: Colors.white70, size: 24),
+            Icon(icon, color: AppColors.primaryGreen, size: 24),
             const SizedBox(width: 16),
             Expanded(
               child: Column(
@@ -437,14 +435,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   Text(
                     title,
                     style: const TextStyle(
-                      color: Colors.white,
+                      color: AppColors.textDark,
                       fontSize: 15,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
                   Text(
                     subtitle,
-                    style: const TextStyle(color: Colors.white54, fontSize: 12),
+                    style: TextStyle(
+                        color: AppColors.textDark.withOpacity(0.6),
+                        fontSize: 12),
                   ),
                 ],
               ),
@@ -452,7 +452,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             Switch(
               value: value,
               onChanged: onChanged,
-              activeColor: AppColors.sage,
+              activeThumbColor: AppColors.sage,
               activeTrackColor: AppColors.sage.withOpacity(0.5),
             ),
           ],
@@ -469,7 +469,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     bool isDestructive = false,
   }) {
     return GlassCard(
-      opacity: 0.1,
+      opacity: 0.9,
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(16),
@@ -478,7 +478,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           child: Row(
             children: [
               Icon(icon,
-                  color: isDestructive ? Colors.redAccent : Colors.white70,
+                  color: isDestructive ? Colors.redAccent : AppColors.textLight,
                   size: 24),
               const SizedBox(width: 16),
               Expanded(
@@ -488,7 +488,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     Text(
                       title,
                       style: TextStyle(
-                        color: isDestructive ? Colors.redAccent : Colors.white,
+                        color: isDestructive
+                            ? Colors.redAccent
+                            : AppColors.textDark,
                         fontSize: 15,
                         fontWeight: FontWeight.w500,
                       ),
@@ -498,7 +500,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       style: TextStyle(
                         color: isDestructive
                             ? Colors.redAccent.withOpacity(0.7)
-                            : Colors.white54,
+                            : AppColors.textDark.withOpacity(0.6),
                         fontSize: 12,
                       ),
                     ),
@@ -506,7 +508,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               ),
               Icon(Icons.chevron_right,
-                  color: isDestructive ? Colors.redAccent : Colors.white54),
+                  color: isDestructive
+                      ? Colors.redAccent
+                      : AppColors.textDark.withOpacity(0.3)),
             ],
           ),
         ),
@@ -520,17 +524,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
     required String value,
   }) {
     return GlassCard(
-      opacity: 0.1,
+      opacity: 0.9,
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Row(
           children: [
-            Icon(icon, color: Colors.white70, size: 24),
+            Icon(icon, color: AppColors.primaryGreen, size: 24),
             const SizedBox(width: 16),
             Text(
               title,
               style: const TextStyle(
-                color: Colors.white,
+                color: AppColors.textDark,
                 fontSize: 15,
                 fontWeight: FontWeight.w500,
               ),
@@ -538,7 +542,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const Spacer(),
             Text(
               value,
-              style: const TextStyle(color: Colors.white54, fontSize: 14),
+              style: TextStyle(
+                  color: AppColors.textDark.withOpacity(0.7), fontSize: 14),
             ),
           ],
         ),
@@ -546,60 +551,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  void _exportData() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text("Veri dışa aktarma özelliği yakında eklenecek..."),
-        backgroundColor: AppColors.sage,
-      ),
+  Widget _buildLegalSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionTitle('Yasal'),
+        const SizedBox(height: 12),
+        _buildActionTile(
+          icon: Icons.privacy_tip_outlined,
+          title: 'Gizlilik Politikası',
+          subtitle: 'Kullanım ve veri politikalarımız',
+          onTap: () {
+            // Placeholder for later
+            debugPrint('Privacy Policy clicked');
+          },
+        ),
+      ],
     );
-  }
-
-  void _confirmDeleteData() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppColors.surfaceDark,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text(
-          "Tüm Verileri Sil?",
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
-        content: const Text(
-          "Bu işlem geri alınamaz. Tüm görevler, ilerleme ve ayarlar silinecek.",
-          style: TextStyle(color: Colors.white70),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child:
-                const Text("Vazgeç", style: TextStyle(color: Colors.white54)),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _deleteAllData();
-            },
-            child: const Text("Sil", style: TextStyle(color: Colors.redAccent)),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _deleteAllData() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.clear();
-    await _adhanService.cancelAllAdhanNotifications();
-
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Tüm veriler silindi."),
-          backgroundColor: Colors.redAccent,
-        ),
-      );
-      Navigator.pop(context);
-    }
   }
 }

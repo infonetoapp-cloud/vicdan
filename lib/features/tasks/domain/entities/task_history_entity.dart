@@ -1,8 +1,4 @@
 class TaskHistoryEntity {
-  final String date;
-  final int totalScore;
-  final int completedCount;
-  final int totalCount;
 
   const TaskHistoryEntity({
     required this.date,
@@ -10,4 +6,8 @@ class TaskHistoryEntity {
     required this.completedCount,
     required this.totalCount,
   });
+  final String date;
+  final int totalScore;
+  final int completedCount;
+  final int totalCount;
 }

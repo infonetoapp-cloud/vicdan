@@ -3,14 +3,6 @@ import 'task_category.dart';
 
 /// Core Task Entity for the Domain Layer
 class TaskEntity extends Equatable {
-  final String id;
-  final String title;
-  final String description;
-  final TaskCategory category;
-  final int xpValue;
-  final int startHour; // 0-23, hour when task unlocks (default 0)
-  final bool isCompleted;
-  final DateTime? completedAt;
 
   const TaskEntity({
     required this.id,
@@ -22,6 +14,14 @@ class TaskEntity extends Equatable {
     this.isCompleted = false,
     this.completedAt,
   });
+  final String id;
+  final String title;
+  final String description;
+  final TaskCategory category;
+  final int xpValue;
+  final int startHour; // 0-23, hour when task unlocks (default 0)
+  final bool isCompleted;
+  final DateTime? completedAt;
 
   /// Create a copy of the task with updated fields
   TaskEntity copyWith({

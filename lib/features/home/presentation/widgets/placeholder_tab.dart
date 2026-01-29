@@ -31,8 +31,8 @@ class PlaceholderTab extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 8),
-              Text(
-                "Bu özellik yapım aşamasında.\nÇok yakında sizlerle.",
+              const Text(
+                'Bu özellik yapım aşamasında.\nÇok yakında sizlerle.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: AppColors.textSecondary,

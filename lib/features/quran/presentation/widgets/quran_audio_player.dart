@@ -5,14 +5,14 @@ import '../../../../shared/widgets/glass_card.dart';
 import '../../data/datasources/quran_audio_service.dart';
 
 class QuranAudioPlayer extends StatefulWidget {
-  final int surahNumber;
-  final String surahName;
 
   const QuranAudioPlayer({
     super.key,
     required this.surahNumber,
     required this.surahName,
   });
+  final int surahNumber;
+  final String surahName;
 
   @override
   State<QuranAudioPlayer> createState() => _QuranAudioPlayerState();
@@ -91,7 +91,7 @@ class _QuranAudioPlayerState extends State<QuranAudioPlayer> {
                             ),
                           ),
                           Text(
-                            "Mishary Rashid Alafasy",
+                            'Mishary Rashid Alafasy',
                             style: TextStyle(
                               color: Colors.white.withOpacity(0.6),
                               fontSize: 12,

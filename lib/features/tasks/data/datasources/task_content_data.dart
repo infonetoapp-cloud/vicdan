@@ -1,11 +1,6 @@
 import '../../domain/entities/task_category.dart';
 
 class TaskBlueprint {
-  final String title;
-  final String description;
-  final TaskCategory category;
-  final int xpValue;
-  final int startHour;
 
   const TaskBlueprint({
     required this.title,
@@ -14,6 +9,11 @@ class TaskBlueprint {
     required this.xpValue,
     required this.startHour,
   });
+  final String title;
+  final String description;
+  final TaskCategory category;
+  final int xpValue;
+  final int startHour;
 }
 
 class TaskContentData {
@@ -30,19 +30,19 @@ class TaskContentData {
 
   static List<TaskBlueprint> _generateFallbackTasks(int index) {
     return [
-      TaskBlueprint(
+      const TaskBlueprint(
           title: 'Günün Başlangıcı',
           description: 'Bugünü Allah rızası için yaşa.',
           category: TaskCategory.ibadet,
           xpValue: 33,
           startHour: 5),
-      TaskBlueprint(
+      const TaskBlueprint(
           title: 'İyilik Vakti',
           description: 'Çevrene bir güzellik kat.',
           category: TaskCategory.iyilik,
           xpValue: 33,
           startHour: 12),
-      TaskBlueprint(
+      const TaskBlueprint(
           title: 'Günün Sonu',
           description: 'Bugün neler yaptın? Düşün.',
           category: TaskCategory.zihin,

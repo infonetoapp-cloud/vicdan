@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../shared/widgets/sky_gradient_background.dart';
+
 import '../../../../shared/widgets/glass_card.dart';
 import '../../data/journey_data.dart';
 import '../../data/mahya_data.dart';
@@ -11,11 +11,11 @@ import '../widgets/digital_mahya_widget.dart';
 import '../../../../features/prayer/data/repositories/prayer_times_repository.dart';
 import 'package:geolocator/geolocator.dart';
 import 'dart:async';
-import '../../../../features/quran/presentation/screens/quran_screen.dart';
 import '../../../../features/quran/data/juz_data.dart';
 import '../../../../features/quran/data/datasources/quran_local_datasource.dart';
 import '../../../../features/quran/data/repositories/quran_repository_impl.dart';
 import '../../../../features/quran/presentation/screens/reading_screen.dart';
+import 'fitra_calculator_screen.dart';
 
 class JourneyScreen extends StatefulWidget {
   const JourneyScreen({super.key});
@@ -96,33 +96,24 @@ class _JourneyScreenState extends State<JourneyScreen> {
       final data =
           _prayerRepo.getPrayerTimes(position.latitude, position.longitude);
 
-      final nextTime = data['next_prayer_datetime'] as DateTime?;
-      final nextName = data['next_prayer_name'] as String?;
+      final maghribTime = data['maghrib_datetime'] as DateTime?;
 
-      if (nextTime != null && nextName != null && mounted) {
+      if (maghribTime != null && mounted) {
         setState(() {
-          _nextPrayerTime = nextTime;
-
-          // Custom Logic for Iftar/Sahur
-          // If next is Aksam -> Iftar
-          // If next is Imsak -> Sahur
-
-          if (nextName == 'Akşam') {
-            _nextPrayerName = 'İftara Kalan Süre';
-          } else if (nextName == 'İmsak') {
-            _nextPrayerName = 'Sahura Kalan Süre';
+          final now = DateTime.now();
+          // If Maghrib has passed today, target tomorrow's Maghrib (Approx +24h)
+          // Accurate enough for "Ramadan Journey" visual.
+          if (now.isAfter(maghribTime)) {
+            _nextPrayerTime = maghribTime.add(const Duration(days: 1));
           } else {
-            // For other times, maybe just show next prayer?
-            // Or hide? The user specifically asked for "İftar/Sahur Sayacı"
-            // I will show generic "Vaktine Kalan" for others, or prioritize Iftar/Sahur.
-            // If it's noon, technically we are waiting for Iftar eventually.
-            // But let's stick to "Next Prayer" generally, but label explicitly for Iftar/Sahur.
-            _nextPrayerName = '$nextName Vaktine Kalan';
+            _nextPrayerTime = maghribTime;
           }
+
+          _nextPrayerName = 'İftara Kalan Süre';
         });
       }
     } catch (e) {
-      debugPrint("Error loading prayer times: $e");
+      debugPrint('Error loading prayer times: $e');
     }
   }
 
@@ -165,14 +156,16 @@ class _JourneyScreenState extends State<JourneyScreen> {
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         title: const Text(
-          "Ramazan Yolculuğu",
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          'Ramazan Yolculuğu',
+          style:
+              TextStyle(color: AppColors.textDark, fontWeight: FontWeight.bold),
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
         leading: GlassIconButton(
           icon: Icons.arrow_back_ios_new_rounded,
+          color: AppColors.textDark,
           onTap: () => Navigator.pop(context),
         ),
         actions: [
@@ -183,7 +176,13 @@ class _JourneyScreenState extends State<JourneyScreen> {
             ),
         ],
       ),
-      body: InteractiveSkyBackground(
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+              colors: [AppColors.backgroundTop, AppColors.backgroundBottom],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter),
+        ),
         child: Stack(
           children: [
             SafeArea(
@@ -203,14 +202,16 @@ class _JourneyScreenState extends State<JourneyScreen> {
                               const Text(
                                 "Ramazan'a Kalan Süre",
                                 style: TextStyle(
-                                    color: AppColors.goldenHour, fontSize: 14),
+                                    color: AppColors.primaryGreen,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold),
                               ),
                               const SizedBox(height: 8),
                               Text(
                                 _formatDuration(_timeUntilRamadan!),
                                 style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 24,
+                                    color: AppColors.textDark,
+                                    fontSize: 28,
                                     fontWeight: FontWeight.bold,
                                     fontFamily: 'Inter'),
                               ),
@@ -221,14 +222,16 @@ class _JourneyScreenState extends State<JourneyScreen> {
                               Text(
                                 _nextPrayerName!,
                                 style: const TextStyle(
-                                    color: AppColors.goldenHour, fontSize: 14),
+                                    color: AppColors.primaryGreen,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold),
                               ),
                               const SizedBox(height: 4),
                               Text(
                                 _formatDuration(_timeUntilPrayer!),
                                 style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 24,
+                                    color: AppColors.textDark,
+                                    fontSize: 28,
                                     fontWeight: FontWeight.bold,
                                     fontFamily: 'Inter'),
                               ),
@@ -240,7 +243,105 @@ class _JourneyScreenState extends State<JourneyScreen> {
                               message: _isSeasonStarted
                                   ? MahyaData.getMessageForDay(
                                       _calculateCurrentRamadanDay())
-                                  : "HOŞ GELDİN YA ŞEHR-İ RAMAZAN",
+                                  : 'HOŞ GELDİN YA ŞEHR-İ RAMAZAN',
+                            ),
+                            const SizedBox(height: 16),
+                            // PROMINENT FITRA BUTTON
+                            InkWell(
+                              onTap: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (_) =>
+                                          const FitraCalculatorScreen())),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 16, vertical: 8),
+                                decoration: BoxDecoration(
+                                  color:
+                                      AppColors.primaryGreen.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(
+                                      color: AppColors.primaryGreen
+                                          .withOpacity(0.3)),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(Icons.calculate_outlined,
+                                        size: 18,
+                                        color: AppColors.primaryGreen),
+                                    const SizedBox(width: 8),
+                                    const Text(
+                                      'Fitre Hesaplayıcı',
+                                      style: TextStyle(
+                                        color: AppColors.primaryGreen,
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Icon(Icons.arrow_forward_ios_rounded,
+                                        size: 10,
+                                        color: AppColors.primaryGreen
+                                            .withOpacity(0.5)),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            // TERAVIH ENCOURAGEMENT
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: AppColors.primaryGreen.withOpacity(0.05),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                    color: AppColors.primaryGreen
+                                        .withOpacity(0.1)),
+                              ),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.primaryGreen
+                                          .withOpacity(0.1),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(
+                                      Icons.nightlight_round,
+                                      size: 16,
+                                      color: AppColors.primaryGreen,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  const Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Teravih Berekettir',
+                                          style: TextStyle(
+                                            color: AppColors.textDark,
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        SizedBox(height: 2),
+                                        Text(
+                                          'Yatsı namazından sonra kalbine bir huzur dokunuşu bırak...',
+                                          style: TextStyle(
+                                            color: AppColors.textLight,
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ],
                         ),
@@ -393,7 +494,7 @@ class _JourneyScreenState extends State<JourneyScreen> {
     return Container(
       height: MediaQuery.of(context).size.height * 0.7,
       decoration: BoxDecoration(
-        color: AppColors.surfaceDark.withOpacity(0.98), // Opaque background
+        color: Colors.white, // Light background
         borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
         boxShadow: [
           BoxShadow(
@@ -409,12 +510,12 @@ class _JourneyScreenState extends State<JourneyScreen> {
         return Column(
           children: [
             const SizedBox(height: 10),
-            Container(width: 40, height: 4, color: Colors.white24),
+            Container(width: 40, height: 4, color: Colors.grey.shade300),
             const SizedBox(height: 30),
             Text(
-              "$day. GÜN",
+              '$day. GÜN',
               style: const TextStyle(
-                color: AppColors.goldenHour,
+                color: AppColors.primaryGreen,
                 fontSize: 14,
                 letterSpacing: 2,
                 fontWeight: FontWeight.bold,
@@ -424,7 +525,7 @@ class _JourneyScreenState extends State<JourneyScreen> {
             Text(
               item.title,
               style: const TextStyle(
-                color: Colors.white,
+                color: AppColors.textDark,
                 fontSize: 32,
                 fontWeight: FontWeight.bold,
               ),
@@ -436,7 +537,7 @@ class _JourneyScreenState extends State<JourneyScreen> {
                 item.content,
                 textAlign: TextAlign.center,
                 style: const TextStyle(
-                  color: Colors.white70,
+                  color: AppColors.textDark,
                   fontSize: 18,
                   height: 1.5,
                 ),
@@ -450,7 +551,7 @@ class _JourneyScreenState extends State<JourneyScreen> {
                 children: [
                   Expanded(
                     child: _buildTrackerOption(
-                        label: "Teravih Kıldım",
+                        label: 'Teravih Kıldım',
                         isSelected: _teravihDays.contains(day),
                         onTap: () async {
                           final newVal = !_teravihDays.contains(day);
@@ -463,7 +564,7 @@ class _JourneyScreenState extends State<JourneyScreen> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: _buildTrackerOption(
-                      label: "Cüz Oku ($day. Cüz)",
+                      label: 'Cüz Oku ($day. Cüz)',
                       isSelected: _hatimDays.contains(day),
                       isAction: true, // Special styling for action
                       onTap: () async {
@@ -500,7 +601,7 @@ class _JourneyScreenState extends State<JourneyScreen> {
                     Navigator.pop(context);
                   },
                   child: const Text(
-                    "Tamamla",
+                    'Tamamla',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -547,12 +648,11 @@ class _JourneyScreenState extends State<JourneyScreen> {
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
         decoration: BoxDecoration(
           color: isSelected
-              ? AppColors.sage.withOpacity(0.2)
-              : Colors.white
-                  .withOpacity(0.1), // Slightly more opaque unselected
+              ? AppColors.primaryGreen.withOpacity(0.1)
+              : Colors.grey.shade50,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected ? AppColors.sage : Colors.white24,
+            color: isSelected ? AppColors.primaryGreen : Colors.grey.shade300,
             width: 1.5,
           ),
         ),
@@ -563,7 +663,7 @@ class _JourneyScreenState extends State<JourneyScreen> {
               children: [
                 Icon(
                   isSelected ? Icons.check_circle : Icons.circle_outlined,
-                  color: isSelected ? AppColors.sage : Colors.white54,
+                  color: isSelected ? AppColors.primaryGreen : Colors.grey,
                   size: 20,
                 ),
                 const SizedBox(width: 8),
@@ -571,7 +671,9 @@ class _JourneyScreenState extends State<JourneyScreen> {
                   child: Text(
                     label,
                     style: TextStyle(
-                      color: isSelected ? Colors.white : Colors.white70,
+                      color: isSelected
+                          ? AppColors.primaryGreen
+                          : AppColors.textDark,
                       fontSize: 13,
                       fontWeight:
                           isSelected ? FontWeight.bold : FontWeight.normal,
@@ -589,19 +691,19 @@ class _JourneyScreenState extends State<JourneyScreen> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                   decoration: BoxDecoration(
-                      color: Colors.white10,
+                      color: Colors.white,
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                          color: AppColors.goldenHour.withOpacity(0.5))),
+                          color: AppColors.primaryGreen.withOpacity(0.5))),
                   child: const Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(Icons.menu_book_rounded,
-                          size: 14, color: AppColors.goldenHour),
+                          size: 14, color: AppColors.primaryGreen),
                       SizedBox(width: 4),
-                      Text("Oku",
+                      Text('Oku',
                           style: TextStyle(
-                              color: AppColors.goldenHour, fontSize: 11)),
+                              color: AppColors.primaryGreen, fontSize: 11)),
                     ],
                   ),
                 ),
@@ -641,11 +743,11 @@ class _JourneyScreenState extends State<JourneyScreen> {
         );
       }
     } catch (e) {
-      debugPrint("Error navigating to juz: $e");
+      debugPrint('Error navigating to juz: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text("Hata: Veri yüklenemedi. ($e)"),
+            content: Text('Hata: Veri yüklenemedi. ($e)'),
             backgroundColor: AppColors.error,
           ),
         );

@@ -8,9 +8,8 @@ import '../../domain/entities/task_history_entity.dart';
 import '../models/task_model.dart';
 
 class TaskRepositoryImpl implements TaskRepository {
-  final LocalTaskDataSource _dataSource;
-
   TaskRepositoryImpl(this._dataSource);
+  final LocalTaskDataSource _dataSource;
 
   @override
   Future<List<TaskEntity>> getDailyTasks() async {
@@ -126,5 +125,10 @@ class TaskRepositoryImpl implements TaskRepository {
   @override
   Future<void> restoreDefaults() async {
     await _dataSource.restoreDefaults();
+  }
+
+  @override
+  Future<int> getTotalCompletedTasksCount() async {
+    return await _dataSource.getTotalCompletedTasksCount();
   }
 }

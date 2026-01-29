@@ -3,17 +3,17 @@ import 'share_card_base.dart';
 
 /// Cuma (Friday) sharing card
 class CumaCard extends ShareCard {
-  final String customMessage;
 
   const CumaCard({
     super.key,
-    this.customMessage = "Cuma günü dua kabul edilir,\ndualarınız kabul olsun",
+    this.customMessage = 'Cuma günü dua kabul edilir,\ndualarınız kabul olsun',
   });
+  final String customMessage;
 
   static const List<String> cumaMessages = [
-    "Cuma günü dua kabul edilir,\ndualarınız kabul olsun",
-    "Hayırlı Cumalar,\ndualarınız kabul olsun",
-    "Bu mübarek günde\nkalplerimiz huzur bulsun",
+    'Cuma günü dua kabul edilir,\ndualarınız kabul olsun',
+    'Hayırlı Cumalar,\ndualarınız kabul olsun',
+    'Bu mübarek günde\nkalplerimiz huzur bulsun',
     "Cuma'nızı tebrik eder,\nhayırlara vesile olmasını dileriz",
   ];
 
@@ -22,7 +22,7 @@ class CumaCard extends ShareCard {
     return AspectRatio(
       aspectRatio: ShareCard.aspectRatio,
       child: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
@@ -40,13 +40,13 @@ class CumaCard extends ShareCard {
               child: Column(
                 children: [
                   // Header
-                  Row(
+                  const Row(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    children: const [
-                      Text("🕌", style: TextStyle(fontSize: 32)),
+                    children: [
+                      Text('🕌', style: TextStyle(fontSize: 32)),
                       SizedBox(width: 16),
                       Text(
-                        "VİCDAN",
+                        'VİCDAN',
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 24,
@@ -55,7 +55,7 @@ class CumaCard extends ShareCard {
                         ),
                       ),
                       SizedBox(width: 16),
-                      Text("🕌", style: TextStyle(fontSize: 32)),
+                      Text('🕌', style: TextStyle(fontSize: 32)),
                     ],
                   ),
 
@@ -63,7 +63,7 @@ class CumaCard extends ShareCard {
 
                   // Crescent and star
                   const Text(
-                    "☪️",
+                    '☪️',
                     style: TextStyle(fontSize: 100),
                   ),
 
@@ -86,7 +86,7 @@ class CumaCard extends ShareCard {
                     child: Column(
                       children: [
                         Text(
-                          "Hayırlı Cumalar",
+                          'Hayırlı Cumalar',
                           style: TextStyle(
                             color: Colors.amber.shade300,
                             fontSize: 42,
@@ -114,7 +114,7 @@ class CumaCard extends ShareCard {
 
                   // Watermark
                   Text(
-                    "vicdan.app",
+                    'vicdan.app',
                     style: TextStyle(
                       color: Colors.white.withOpacity(0.4),
                       fontSize: 18,
@@ -136,14 +136,14 @@ class CumaCard extends ShareCard {
       Positioned(
         top: 100,
         left: 20,
-        child: Text("🌿",
+        child: Text('🌿',
             style:
                 TextStyle(fontSize: 40, color: Colors.white.withOpacity(0.2))),
       ),
       Positioned(
         top: 100,
         right: 20,
-        child: Text("🌿",
+        child: Text('🌿',
             style:
                 TextStyle(fontSize: 40, color: Colors.white.withOpacity(0.2))),
       ),
@@ -156,7 +156,7 @@ class CumaCard extends ShareCard {
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: List.generate(
             5,
-            (i) => Text("🕌",
+            (i) => Text('🕌',
                 style: TextStyle(
                     fontSize: 30, color: Colors.white.withOpacity(0.15))),
           ),

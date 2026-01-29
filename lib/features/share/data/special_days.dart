@@ -101,16 +101,16 @@ class SpecialDays {
 enum SpecialDayType { normal, cuma, kandil, bayram }
 
 class KandilInfo {
-  final String name;
-  final String message;
 
   KandilInfo({required this.name, required this.message});
+  final String name;
+  final String message;
 }
 
 class BayramInfo {
+
+  BayramInfo({required this.name, required this.day, required this.message});
   final String name;
   final int day;
   final String message;
-
-  BayramInfo({required this.name, required this.day, required this.message});
 }

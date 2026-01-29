@@ -19,4 +19,5 @@ abstract class TaskRepository {
   Future<void> addTask(TaskEntity task);
   Future<void> deleteTask(String id);
   Future<void> restoreDefaults();
+  Future<int> getTotalCompletedTasksCount();
 }

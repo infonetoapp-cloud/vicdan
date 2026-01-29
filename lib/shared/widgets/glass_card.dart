@@ -76,12 +76,14 @@ class GlassIconButton extends StatelessWidget {
     required this.onTap,
     this.size = 40,
     this.iconSize = 20,
+    this.color,
   });
 
   final IconData icon;
   final VoidCallback onTap;
   final double size;
   final double iconSize;
+  final Color? color;
 
   @override
   Widget build(BuildContext context) {
@@ -108,7 +110,7 @@ class GlassIconButton extends StatelessWidget {
               child: Icon(
                 icon,
                 size: iconSize,
-                color: AppColors.textPrimary,
+                color: color ?? AppColors.textPrimary,
               ),
             ),
           ),

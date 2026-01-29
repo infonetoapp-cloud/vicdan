@@ -105,7 +105,7 @@ void main() async {
     // Write output
     print('\n💾 Writing unified Quran data...');
     final outputFile = File(outputPath);
-    final encoder = JsonEncoder.withIndent('  ');
+    const encoder = JsonEncoder.withIndent('  ');
     await outputFile.writeAsString(encoder.convert(finalJson));
 
     // Stats

@@ -5,16 +5,15 @@ import '../../domain/entities/journey_item.dart';
 enum JourneyCardStatus { locked, unlocked, completed }
 
 class JourneyCard extends StatelessWidget {
-  final JourneyItem item;
-  final JourneyCardStatus status;
-  final VoidCallback onTap;
-
   const JourneyCard({
     super.key,
     required this.item,
     required this.status,
     required this.onTap,
   });
+  final JourneyItem item;
+  final JourneyCardStatus status;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -54,20 +53,20 @@ class JourneyCard extends StatelessWidget {
                   if (status == JourneyCardStatus.locked)
                     const Icon(
                       Icons.lock_outline_rounded,
-                      color: Colors.white30,
+                      color: Colors.grey, // Visible grey on light bg
                       size: 20,
                     )
                   else if (status == JourneyCardStatus.completed)
                     const Icon(
                       Icons.check_circle_rounded,
-                      color: AppColors.sage,
+                      color: Colors.white, // White on Green
                       size: 24,
                     )
                   else
                     Text(
-                      "${item.day}",
+                      '${item.day}',
                       style: const TextStyle(
-                        color: AppColors.goldenHour,
+                        color: AppColors.textDark,
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
                         fontFamily: 'Inter',
@@ -89,11 +88,11 @@ class JourneyCard extends StatelessWidget {
   Color _getBackgroundColor() {
     switch (status) {
       case JourneyCardStatus.locked:
-        return Colors.white.withOpacity(0.05);
+        return Colors.black.withOpacity(0.05); // Light grey
       case JourneyCardStatus.unlocked:
-        return AppColors.surfaceCard;
+        return Colors.white;
       case JourneyCardStatus.completed:
-        return AppColors.sage.withOpacity(0.2);
+        return AppColors.primaryGreen; // Solid Green
     }
   }
 

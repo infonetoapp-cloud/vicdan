@@ -81,7 +81,8 @@ class _PrayerScreenState extends State<PrayerScreen> {
   Future<void> _loadPrayerTimes() async {
     try {
       final position = await _locationService.determinePosition();
-      final address = await _locationService.getAddressFromCoordinates(position);
+      final address =
+          await _locationService.getAddressFromCoordinates(position);
       final data =
           _prayerRepo.getPrayerTimes(position.latitude, position.longitude);
       if (mounted) {
@@ -153,9 +154,37 @@ class _PrayerScreenState extends State<PrayerScreen> {
           _buildHeader(context),
           const SizedBox(height: 20),
           if (_loading)
-            const Expanded(
-              child: Center(
-                child: CircularProgressIndicator(color: Colors.white),
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    // Skeleton Header Card
+                    Container(
+                      height: 120,
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.05),
+                        borderRadius: BorderRadius.circular(20),
+                        border:
+                            Border.all(color: Colors.black.withOpacity(0.05)),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    // Skeleton List
+                    ...List.generate(
+                      6,
+                      (index) => Container(
+                        margin: const EdgeInsets.only(bottom: 10),
+                        height: 60,
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(0.03),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             )
           else

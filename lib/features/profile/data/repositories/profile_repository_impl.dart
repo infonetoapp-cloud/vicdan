@@ -6,15 +6,21 @@ import '../../../tasks/data/repositories/task_repository_impl.dart';
 /// Implementation of ProfileRepository.
 /// Fetches data from TaskRepository and SharedPreferences.
 class ProfileRepositoryImpl implements ProfileRepository {
+  ProfileRepositoryImpl(this._taskRepo);
   final TaskRepositoryImpl _taskRepo;
   late SharedPreferences _prefs;
   bool _initialized = false;
 
-  ProfileRepositoryImpl(this._taskRepo);
-
   Future<void> _init() async {
     if (!_initialized) {
       _prefs = await SharedPreferences.getInstance();
+
+      // Save account start date if not exists
+      if (!_prefs.containsKey('account_start_date')) {
+        await _prefs.setString(
+            'account_start_date', DateTime.now().toIso8601String());
+      }
+
       _initialized = true;
     }
   }
@@ -25,9 +31,24 @@ class ProfileRepositoryImpl implements ProfileRepository {
 
     final streak = await getCurrentStreak();
     final longestStreak = await getLongestStreak();
-    final totalTasks = await getTotalCompletedTasks();
+    final totalTasks = await _taskRepo.getTotalCompletedTasksCount();
     final todayScore = await _taskRepo.calculateDailyScore();
     final userName = _prefs.getString('user_name') ?? 'Yolcu';
+
+    // Calculate days using app
+    final startStr = _prefs.getString('account_start_date');
+    int daysUsingApp = 1;
+    if (startStr != null) {
+      final startDate = DateTime.parse(startStr);
+      daysUsingApp = DateTime.now().difference(startDate).inDays + 1;
+    }
+
+    // Calculate Quran reading minutes from stored seconds for better precision
+    final totalSeconds = _prefs.getInt('quran_reading_seconds') ??
+        ((_prefs.getInt('quran_reading_minutes') ?? 0) * 60);
+    final quranReadingMinutes = totalSeconds ~/ 60;
+
+    final avatarUrl = _prefs.getString('user_avatar');
 
     return UserStats(
       currentStreak: streak,
@@ -35,6 +56,9 @@ class ProfileRepositoryImpl implements ProfileRepository {
       totalCompletedTasks: totalTasks,
       todayScore: todayScore,
       userName: userName,
+      daysUsingApp: daysUsingApp,
+      quranReadingMinutes: quranReadingMinutes,
+      avatarUrl: avatarUrl,
     );
   }
 
@@ -58,20 +82,15 @@ class ProfileRepositoryImpl implements ProfileRepository {
 
   @override
   Future<List<Map<String, dynamic>>> getHealthScoreHistory(int days) async {
-    // Placeholder: Generate mock data for now
-    final List<Map<String, dynamic>> history = [];
-    final now = DateTime.now();
+    final history = await _taskRepo.getHistory(days);
 
-    for (int i = days - 1; i >= 0; i--) {
-      final date = now.subtract(Duration(days: i));
-      final score = 50 + (date.day % 50);
-      history.add({
-        'date': date,
-        'score': score,
-      });
-    }
-
-    return history;
+    // Map TaskHistoryEntity to expected Map format
+    return history.map((e) {
+      return {
+        'date': DateTime.parse(e.date),
+        'score': e.totalScore,
+      };
+    }).toList();
   }
 
   /// Saves user name to preferences.

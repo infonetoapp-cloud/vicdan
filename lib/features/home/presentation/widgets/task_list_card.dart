@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_lucide/flutter_lucide.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../tasks/domain/entities/task_entity.dart';
+import '../../../tasks/domain/entities/task_category.dart';
 import '../../../tasks/presentation/screens/task_detail_screen.dart';
-import 'task_item_widget.dart'; // Import the new widget
 
 /// Task list card with Glassmorphism styling
 class TaskListCard extends StatelessWidget {
@@ -23,108 +23,227 @@ class TaskListCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(24), // More rounded
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20), // Stronger blur
-        child: Container(
-          padding: const EdgeInsets.all(20), // More spacing
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.12),
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-              color: Colors.white.withOpacity(0.18),
-              width: 1,
-            ),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Header
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 8.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // Header
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
                         'Bugünün Görevleri',
                         style: TextStyle(
                           color: AppColors.textPrimary,
-                          fontSize: 16,
+                          fontSize: 17,
                           fontWeight: FontWeight.w700,
                           letterSpacing: -0.5,
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      // History Button (Small)
-                      GestureDetector(
-                        onTap: onHistoryTap,
-                        child: Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.1), // Subtle bg
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Icon(LucideIcons.calendar,
-                              size: 16,
-                              color: AppColors.textTertiary.withOpacity(0.8)),
+                      Text(
+                        'Her gece yenilenir',
+                        style: TextStyle(
+                          color: AppColors.textLight.withOpacity(0.8),
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
                     ],
                   ),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: AppColors.primaryGreen.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      '$completedCount/${tasks.length}',
-                      style: TextStyle(
-                        color: AppColors.primaryGreen,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
+                  const SizedBox(width: 8),
+                  GestureDetector(
+                    onTap: onHistoryTap,
+                    child: Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(8),
                       ),
+                      child: Icon(LucideIcons.calendar,
+                          size: 16, color: AppColors.textTertiary),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
-
-              // Task list
-              Expanded(
-                child: ListView.separated(
-                  padding: EdgeInsets.zero,
-                  physics: const BouncingScrollPhysics(),
-                  itemCount: tasks.length,
-                  separatorBuilder: (_, __) =>
-                      const SizedBox(height: 0), // handled by margin
-                  itemBuilder: (context, index) {
-                    final task = tasks[index];
-                    return TaskItemWidget(
-                      task: task,
-                      onToggle: (completed) => onTaskToggle(task.id, completed),
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => TaskDetailScreen(
-                              task: task,
-                              onToggle: (completed) =>
-                                  onTaskToggle(task.id, completed),
-                            ),
-                          ),
-                        );
-                      },
-                    );
-                  },
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: AppColors.primaryGreen.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                      color: AppColors.primaryGreen.withOpacity(0.3)),
+                ),
+                child: Text(
+                  '$completedCount/${tasks.length}',
+                  style: const TextStyle(
+                    color: AppColors.primaryGreen,
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ],
           ),
         ),
+        const SizedBox(height: 8),
+        // Horizontal List
+        SizedBox(
+          height: 140,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            itemCount: tasks.length,
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            separatorBuilder: (_, __) => const SizedBox(width: 12),
+            itemBuilder: (context, index) {
+              final task = tasks[index];
+              return _buildHorizontalTaskCard(context, task);
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildHorizontalTaskCard(BuildContext context, TaskEntity task) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => TaskDetailScreen(
+              task: task,
+              onToggle: (completed) => onTaskToggle(task.id, completed),
+            ),
+          ),
+        );
+      },
+      child: Container(
+        width: 130, // Compact width
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: task.isCompleted
+              ? AppColors.primaryGreen.withOpacity(0.1) // Light Green
+              : Colors.white, // Solid White
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: task.isCompleted
+                ? AppColors.primaryGreen.withOpacity(0.3)
+                : AppColors.glassBorder, // Subtle border
+            width: 1,
+          ),
+          boxShadow: [
+            if (!task.isCompleted)
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 8,
+                offset: const Offset(0, 4),
+              ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            // Top Row: Icon and Checkbox
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                // Category Icon
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: task.isCompleted
+                        ? Colors.white.withOpacity(0.5)
+                        : AppColors.primaryGreen.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    _getTaskIcon(task.category),
+                    size: 16,
+                    color: AppColors.primaryGreen,
+                  ),
+                ),
+                // Checkbox
+                GestureDetector(
+                  onTap: () => onTaskToggle(task.id, !task.isCompleted),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 300),
+                    width: 24,
+                    height: 24,
+                    decoration: BoxDecoration(
+                      color: task.isCompleted
+                          ? AppColors.primaryGreen
+                          : Colors.transparent,
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: task.isCompleted
+                            ? AppColors.primaryGreen
+                            : AppColors.textDisabled,
+                        width: 2,
+                      ),
+                    ),
+                    child: task.isCompleted
+                        ? const Icon(Icons.check, size: 16, color: Colors.white)
+                        : null,
+                  ),
+                ),
+              ],
+            ),
+
+            // Title
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.only(top: 10),
+                child: Text(
+                  task.title,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: task.isCompleted
+                        ? AppColors.textLight.withOpacity(0.7) // Visible grey
+                        : AppColors.textPrimary,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    decoration:
+                        task.isCompleted ? TextDecoration.lineThrough : null,
+                    decorationColor: AppColors.primaryGreen, // Green line
+                  ),
+                ),
+              ),
+            ),
+
+            // XP Footnote
+            if (task.xpValue > 0 && !task.isCompleted)
+              Text(
+                '+${task.xpValue} Puan',
+                style: const TextStyle(
+                  color: AppColors.accentGold,
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+          ],
+        ),
       ),
     );
+  }
+
+  IconData _getTaskIcon(TaskCategory category) {
+    switch (category) {
+      case TaskCategory.ibadet:
+        return LucideIcons.moon;
+      case TaskCategory.iyilik:
+        return LucideIcons.heart_handshake;
+      case TaskCategory.zihin:
+        return LucideIcons.flower;
+    }
   }
 }

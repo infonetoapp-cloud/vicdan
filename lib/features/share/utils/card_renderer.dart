@@ -24,7 +24,7 @@ class CardRenderer {
 
       return byteData?.buffer.asUint8List();
     } catch (e) {
-      debugPrint("Error capturing widget: $e");
+      debugPrint('Error capturing widget: $e');
       return null;
     }
   }
@@ -38,7 +38,7 @@ class CardRenderer {
       await file.writeAsBytes(bytes);
       return file.path;
     } catch (e) {
-      debugPrint("Error saving image: $e");
+      debugPrint('Error saving image: $e');
       return null;
     }
   }
@@ -51,13 +51,13 @@ class CardRenderer {
   }) async {
     final bytes = await captureWidget(key);
     if (bytes == null) {
-      debugPrint("Failed to capture widget");
+      debugPrint('Failed to capture widget');
       return;
     }
 
     final path = await saveToTempFile(bytes, filename);
     if (path == null) {
-      debugPrint("Failed to save image");
+      debugPrint('Failed to save image');
       return;
     }
 

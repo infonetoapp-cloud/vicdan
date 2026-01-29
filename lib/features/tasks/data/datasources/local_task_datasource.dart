@@ -264,4 +264,21 @@ class LocalTaskDataSource {
     await db.delete('tasks');
     await _seedInitialTasks(db);
   }
+
+  /// Get total completed tasks across all time (history + current)
+  Future<int> getTotalCompletedTasksCount() async {
+    final db = await database;
+
+    // 1. Sum completedCount from history
+    final historyResult = await db
+        .rawQuery('SELECT SUM(completedCount) as total FROM task_history');
+    int historyCount = (historyResult.first['total'] as num?)?.toInt() ?? 0;
+
+    // 2. Count completed tasks from current active tasks
+    final currentResult = await db
+        .rawQuery('SELECT COUNT(*) as total FROM tasks WHERE isCompleted = 1');
+    int currentCount = (currentResult.first['total'] as num?)?.toInt() ?? 0;
+
+    return historyCount + currentCount;
+  }
 }

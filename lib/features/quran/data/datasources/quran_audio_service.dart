@@ -4,9 +4,9 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/foundation.dart';
 
 class QuranAudioService {
-  static final QuranAudioService _instance = QuranAudioService._internal();
   factory QuranAudioService() => _instance;
   QuranAudioService._internal();
+  static final QuranAudioService _instance = QuranAudioService._internal();
 
   final AudioPlayer _player = AudioPlayer();
 
@@ -30,7 +30,7 @@ class QuranAudioService {
     final connectivityResult = await Connectivity().checkConnectivity();
     if (connectivityResult.contains(ConnectivityResult.none)) {
       throw Exception(
-          "İnternet bağlantısı yok.\nSes dosyaları çevrimiçi kaynaklardan oynatılmaktadır.");
+          'İnternet bağlantısı yok.\nSes dosyaları çevrimiçi kaynaklardan oynatılmaktadır.');
     }
 
     try {
@@ -55,7 +55,7 @@ class QuranAudioService {
       await _player.setAudioSource(playlist, initialIndex: initialIndex);
       await _player.play();
     } catch (e) {
-      debugPrint("Error playing surah: $e");
+      debugPrint('Error playing surah: $e');
       rethrow;
     }
   }

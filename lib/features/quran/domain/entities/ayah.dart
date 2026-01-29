@@ -5,6 +5,12 @@ import 'package:equatable/equatable.dart';
 /// This is a pure business entity with no dependencies on data layer.
 /// Immutable and contains only business logic.
 class Ayah extends Equatable {
+
+  const Ayah({
+    required this.number,
+    required this.arabic,
+    required this.translation,
+  });
   /// Ayah number within the surah (1-indexed)
   final int number;
 
@@ -13,12 +19,6 @@ class Ayah extends Equatable {
 
   /// Translation of the ayah (Turkish)
   final String translation;
-
-  const Ayah({
-    required this.number,
-    required this.arabic,
-    required this.translation,
-  });
 
   /// Creates a copy of this Ayah with updated fields
   Ayah copyWith({

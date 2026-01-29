@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
-import '../../../../shared/widgets/sky_gradient_background.dart';
+import 'package:google_fonts/google_fonts.dart';
+
 import '../../domain/entities/surah.dart';
 import '../../data/datasources/quran_audio_service.dart';
 import '../widgets/ayah_widget.dart';
@@ -10,14 +12,15 @@ import '../../../../core/theme/app_colors.dart';
 
 /// Reading screen for displaying all ayahs of a surah
 class ReadingScreen extends StatefulWidget {
-  final Surah surah;
-  final int? startAyahNumber; // 1-based Ayah number
+  // 1-based Ayah number
 
   const ReadingScreen({
     super.key,
     required this.surah,
     this.startAyahNumber,
   });
+  final Surah surah;
+  final int? startAyahNumber;
 
   @override
   State<ReadingScreen> createState() => _ReadingScreenState();
@@ -31,7 +34,8 @@ class _ReadingScreenState extends State<ReadingScreen> {
   final PreferencesService _prefsService = PreferencesService();
 
   int? _currentAyahIndex;
-  Set<int> _bookmarkedAyahs = {};
+  final Set<int> _bookmarkedAyahs = {};
+  final Stopwatch _readingStopwatch = Stopwatch();
 
   @override
   void initState() {
@@ -51,6 +55,9 @@ class _ReadingScreenState extends State<ReadingScreen> {
         _saveProgress(index);
       }
     });
+
+    // Start tracking reading time
+    _readingStopwatch.start();
   }
 
   void _jumpToStartAyah() {
@@ -123,55 +130,74 @@ class _ReadingScreenState extends State<ReadingScreen> {
   @override
   void dispose() {
     _audioService.stop();
+    _saveReadingTime();
+    _readingStopwatch.stop();
     super.dispose();
+  }
+
+  Future<void> _saveReadingTime() async {
+    final seconds = _readingStopwatch.elapsed.inSeconds;
+    if (seconds > 10) {
+      // Only save if more than 10 seconds to avoid noise
+      final prefs = await SharedPreferences.getInstance();
+
+      // We store seconds but expose minutes in UI.
+      // Let's store raw cumulative seconds for accuracy.
+      final currentTotalSeconds = prefs.getInt('quran_reading_seconds') ?? 0;
+      final newTotalSeconds = currentTotalSeconds + seconds;
+      await prefs.setInt('quran_reading_seconds', newTotalSeconds);
+
+      // Update legacy minutes for compatibility with other parts of the app
+      await prefs.setInt('quran_reading_minutes', newTotalSeconds ~/ 60);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SkyGradientBackground(
-        child: SafeArea(
-          child: Stack(
-            children: [
-              Column(
-                children: [
-                  _buildHeader(),
-                  Expanded(
-                    child: ScrollablePositionedList.builder(
-                      itemScrollController: _itemScrollController,
-                      itemPositionsListener: _itemPositionsListener,
-                      padding: const EdgeInsets.fromLTRB(20, 16, 20, 100),
-                      itemCount: widget.surah.ayahs.length + 1,
-                      itemBuilder: (context, index) {
-                        if (index == 0) {
-                          return _buildSurahHeader();
-                        }
+      backgroundColor:
+          AppColors.creamBackground, // Cream background for readability
+      body: SafeArea(
+        child: Stack(
+          children: [
+            Column(
+              children: [
+                _buildHeader(), // Reusing the header but will refactor internal colors
+                Expanded(
+                  child: ScrollablePositionedList.builder(
+                    itemScrollController: _itemScrollController,
+                    itemPositionsListener: _itemPositionsListener,
+                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 100),
+                    itemCount: widget.surah.ayahs.length + 1,
+                    itemBuilder: (context, index) {
+                      if (index == 0) {
+                        return _buildSurahHeader();
+                      }
 
-                        final ayahIndex = index - 1;
-                        final ayah = widget.surah.ayahs[ayahIndex];
+                      final ayahIndex = index - 1;
+                      final ayah = widget.surah.ayahs[ayahIndex];
 
-                        return AyahWidget(
-                          ayah: ayah,
-                          isBookmarked: _bookmarkedAyahs.contains(ayah.number),
-                          isActive: _currentAyahIndex == ayahIndex,
-                          onTap: () => _onAyahTap(ayahIndex),
-                        );
-                      },
-                    ),
+                      return AyahWidget(
+                        ayah: ayah,
+                        isBookmarked: _bookmarkedAyahs.contains(ayah.number),
+                        isActive: _currentAyahIndex == ayahIndex,
+                        onTap: () => _onAyahTap(ayahIndex),
+                      );
+                    },
                   ),
-                ],
-              ),
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: 0,
-                child: QuranAudioPlayer(
-                  surahNumber: widget.surah.number,
-                  surahName: widget.surah.nameTurkish,
                 ),
+              ],
+            ),
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: QuranAudioPlayer(
+                surahNumber: widget.surah.number,
+                surahName: widget.surah.nameTurkish,
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -181,20 +207,20 @@ class _ReadingScreenState extends State<ReadingScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            Colors.black.withOpacity(0.3),
-            Colors.transparent,
-          ],
-        ),
+        color: AppColors.creamBackground,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Row(
         children: [
           IconButton(
             onPressed: () => Navigator.pop(context),
-            icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+            icon: const Icon(Icons.arrow_back_ios, color: AppColors.textDark),
           ),
           const SizedBox(width: 8),
           Expanded(
@@ -204,7 +230,7 @@ class _ReadingScreenState extends State<ReadingScreen> {
                 Text(
                   widget.surah.nameTurkish,
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: Colors.white,
+                        color: AppColors.textDark,
                         fontWeight: FontWeight.w700,
                         letterSpacing: 0.3,
                       ),
@@ -213,7 +239,7 @@ class _ReadingScreenState extends State<ReadingScreen> {
                 Text(
                   '${widget.surah.nameArabic} • ${widget.surah.totalAyahs} Ayet',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Colors.white70,
+                        color: AppColors.textDark.withOpacity(0.7),
                       ),
                 ),
               ],
@@ -229,12 +255,11 @@ class _ReadingScreenState extends State<ReadingScreen> {
             icon: Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                  color: AppColors.goldenHour.withOpacity(0.8), // More visible
+                  color: AppColors.accentGold, // More visible
                   shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white.withOpacity(0.5)),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.goldenHour.withOpacity(0.3),
+                      color: AppColors.accentGold.withOpacity(0.3),
                       blurRadius: 8,
                       spreadRadius: 2,
                     )
@@ -253,36 +278,37 @@ class _ReadingScreenState extends State<ReadingScreen> {
       margin: const EdgeInsets.only(bottom: 24),
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Colors.white.withOpacity(0.15),
-            Colors.white.withOpacity(0.05),
-          ],
-        ),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: Colors.white.withOpacity(0.2),
+          color: AppColors.textDark.withOpacity(0.05),
           width: 1,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
+          ),
+        ],
       ),
       child: Column(
         children: [
           Text(
             widget.surah.nameArabic,
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 1,
-                ),
+            style: GoogleFonts.amiri(
+              textStyle: Theme.of(context).textTheme.headlineMedium,
+              color: AppColors.primaryGreen,
+              fontWeight: FontWeight.bold,
+              fontSize: 32,
+            ),
           ),
           const SizedBox(height: 8),
           Text(
             widget.surah.nameTurkish,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: Colors.white.withOpacity(0.8),
-                  fontWeight: FontWeight.w500,
+                  color: AppColors.textDark,
+                  fontWeight: FontWeight.w600,
                 ),
           ),
           const SizedBox(height: 16),
@@ -292,12 +318,13 @@ class _ReadingScreenState extends State<ReadingScreen> {
               'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ',
               textAlign: TextAlign.center,
               textDirection: TextDirection.rtl,
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w500,
-                    height: 2,
-                    letterSpacing: 0.5,
-                  ),
+              style: GoogleFonts.amiri(
+                textStyle: Theme.of(context).textTheme.headlineSmall,
+                color: AppColors.textDark,
+                fontWeight: FontWeight.w500,
+                height: 2,
+                fontSize: 24,
+              ),
             ),
           ],
         ],
@@ -325,7 +352,7 @@ class _ReadingScreenState extends State<ReadingScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(e.toString().replaceAll('Exception: ', '')),
-            backgroundColor: Colors.redAccent,
+            backgroundColor: AppColors.deepRose,
             action: SnackBarAction(
               label: 'Ayarlar',
               textColor: Colors.white,

@@ -3,21 +3,21 @@ import 'share_card_base.dart';
 
 /// Kandil (Holy Night) sharing card
 class KandilCard extends ShareCard {
-  final String kandilName;
-  final String message;
 
   const KandilCard({
     super.key,
     required this.kandilName,
     required this.message,
   });
+  final String kandilName;
+  final String message;
 
   @override
   Widget build(BuildContext context) {
     return AspectRatio(
       aspectRatio: ShareCard.aspectRatio,
       child: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
@@ -35,15 +35,15 @@ class KandilCard extends ShareCard {
               child: Column(
                 children: [
                   // Header
-                  Row(
+                  const Row(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    children: const [
-                      Text("🌙", style: TextStyle(fontSize: 28)),
+                    children: [
+                      Text('🌙', style: TextStyle(fontSize: 28)),
                       SizedBox(width: 12),
-                      Text("✨", style: TextStyle(fontSize: 24)),
+                      Text('✨', style: TextStyle(fontSize: 24)),
                       SizedBox(width: 12),
                       Text(
-                        "VİCDAN",
+                        'VİCDAN',
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 24,
@@ -52,9 +52,9 @@ class KandilCard extends ShareCard {
                         ),
                       ),
                       SizedBox(width: 12),
-                      Text("✨", style: TextStyle(fontSize: 24)),
+                      Text('✨', style: TextStyle(fontSize: 24)),
                       SizedBox(width: 12),
-                      Text("🌙", style: TextStyle(fontSize: 28)),
+                      Text('🌙', style: TextStyle(fontSize: 28)),
                     ],
                   ),
 
@@ -79,7 +79,7 @@ class KandilCard extends ShareCard {
                           ],
                         ),
                       ),
-                      const Text("🌙", style: TextStyle(fontSize: 120)),
+                      const Text('🌙', style: TextStyle(fontSize: 120)),
                     ],
                   ),
 
@@ -89,11 +89,11 @@ class KandilCard extends ShareCard {
                   const Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text("⭐", style: TextStyle(fontSize: 32)),
+                      Text('⭐', style: TextStyle(fontSize: 32)),
                       SizedBox(width: 20),
-                      Text("✨", style: TextStyle(fontSize: 40)),
+                      Text('✨', style: TextStyle(fontSize: 40)),
                       SizedBox(width: 20),
-                      Text("⭐", style: TextStyle(fontSize: 32)),
+                      Text('⭐', style: TextStyle(fontSize: 32)),
                     ],
                   ),
 
@@ -127,7 +127,7 @@ class KandilCard extends ShareCard {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          "MÜBAREK OLSUN",
+                          'MÜBAREK OLSUN',
                           style: TextStyle(
                             color: Colors.amber.shade200,
                             fontSize: 24,
@@ -145,7 +145,7 @@ class KandilCard extends ShareCard {
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     child: Text(
-                      "\"$message\"",
+                      '"$message"',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         color: Colors.white.withOpacity(0.85),
@@ -160,7 +160,7 @@ class KandilCard extends ShareCard {
 
                   // Watermark
                   Text(
-                    "vicdan.app",
+                    'vicdan.app',
                     style: TextStyle(
                       color: Colors.white.withOpacity(0.4),
                       fontSize: 18,
@@ -183,7 +183,7 @@ class KandilCard extends ShareCard {
         left: (i * 47) % 380 + 10.0,
         top: (i * 73) % 700 + 30.0,
         child: Text(
-          isLargeStar ? "⭐" : "✨",
+          isLargeStar ? '⭐' : '✨',
           style: TextStyle(
             fontSize: isLargeStar ? 16.0 : 10.0,
             color: Colors.white.withOpacity(0.3 + (i % 4) * 0.1),

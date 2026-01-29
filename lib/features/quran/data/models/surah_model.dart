@@ -6,12 +6,6 @@ import 'ayah_model.dart';
 /// This model handles conversion between JSON and domain entity.
 /// Used by the data layer only.
 class SurahModel {
-  final int number;
-  final String nameArabic;
-  final String nameTurkish;
-  final String revelationPlace;
-  final int totalAyahs;
-  final List<AyahModel> ayahs;
 
   const SurahModel({
     required this.number,
@@ -49,6 +43,24 @@ class SurahModel {
     );
   }
 
+  /// Creates SurahModel from domain entity
+  factory SurahModel.fromEntity(Surah entity) {
+    return SurahModel(
+      number: entity.number,
+      nameArabic: entity.nameArabic,
+      nameTurkish: entity.nameTurkish,
+      revelationPlace: entity.revelationPlace,
+      totalAyahs: entity.totalAyahs,
+      ayahs: entity.ayahs.map((ayah) => AyahModel.fromEntity(ayah)).toList(),
+    );
+  }
+  final int number;
+  final String nameArabic;
+  final String nameTurkish;
+  final String revelationPlace;
+  final int totalAyahs;
+  final List<AyahModel> ayahs;
+
   /// Converts SurahModel to JSON
   Map<String, dynamic> toJson() {
     return {
@@ -70,18 +82,6 @@ class SurahModel {
       revelationPlace: revelationPlace,
       totalAyahs: totalAyahs,
       ayahs: ayahs.map((model) => model.toEntity()).toList(),
-    );
-  }
-
-  /// Creates SurahModel from domain entity
-  factory SurahModel.fromEntity(Surah entity) {
-    return SurahModel(
-      number: entity.number,
-      nameArabic: entity.nameArabic,
-      nameTurkish: entity.nameTurkish,
-      revelationPlace: entity.revelationPlace,
-      totalAyahs: entity.totalAyahs,
-      ayahs: entity.ayahs.map((ayah) => AyahModel.fromEntity(ayah)).toList(),
     );
   }
 

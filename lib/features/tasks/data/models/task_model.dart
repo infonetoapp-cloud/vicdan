@@ -14,6 +14,22 @@ class TaskModel extends TaskEntity {
     super.completedAt,
   });
 
+  /// Create from Map (SQFLite)
+  factory TaskModel.fromMap(Map<String, dynamic> map) {
+    return TaskModel(
+      id: map['id'] as String,
+      title: map['title'] as String,
+      description: map['description'] as String,
+      category: TaskCategory.values[map['category'] as int],
+      xpValue: map['xpValue'] as int,
+      startHour: (map['startHour'] as int?) ?? 0,
+      isCompleted: (map['isCompleted'] as int) == 1,
+      completedAt: map['completedAt'] != null
+          ? DateTime.parse(map['completedAt'] as String)
+          : null,
+    );
+  }
+
   /// Factory to create generic tasks (initial seed)
   factory TaskModel.create({
     required String id,
@@ -47,21 +63,5 @@ class TaskModel extends TaskEntity {
       'isCompleted': isCompleted ? 1 : 0, // SQFLite lacks boolean
       'completedAt': completedAt?.toIso8601String(),
     };
-  }
-
-  /// Create from Map (SQFLite)
-  factory TaskModel.fromMap(Map<String, dynamic> map) {
-    return TaskModel(
-      id: map['id'] as String,
-      title: map['title'] as String,
-      description: map['description'] as String,
-      category: TaskCategory.values[map['category'] as int],
-      xpValue: map['xpValue'] as int,
-      startHour: (map['startHour'] as int?) ?? 0,
-      isCompleted: (map['isCompleted'] as int) == 1,
-      completedAt: map['completedAt'] != null
-          ? DateTime.parse(map['completedAt'] as String)
-          : null,
-    );
   }
 }

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../shared/widgets/glass_card.dart';
 import '../../../../shared/widgets/sky_gradient_background.dart';
 import '../../data/special_days.dart';
 import '../../utils/card_renderer.dart';
@@ -46,9 +45,9 @@ class _ShareCenterScreenState extends State<ShareCenterScreen> {
 
     // Always available: Tree Story Card
     cards.add(ShareCardInfo(
-      title: "Ağaç Hikayem",
-      icon: "🌳",
-      description: "Yolculuğunu paylaş",
+      title: 'Ağaç Hikayem',
+      icon: '🌳',
+      description: 'Yolculuğunu paylaş',
       builder: () => TreeStoryCard(
         streakDays: _streakDays,
         healthScore: _healthScore,
@@ -64,8 +63,8 @@ class _ShareCenterScreenState extends State<ShareCenterScreen> {
           0,
           ShareCardInfo(
             title: bayram.name,
-            icon: "🎉",
-            description: "Bayram tebriğini paylaş",
+            icon: '🎉',
+            description: 'Bayram tebriğini paylaş',
             builder: () => BayramCard(
               bayramName: bayram.name,
               message: bayram.message,
@@ -78,8 +77,8 @@ class _ShareCenterScreenState extends State<ShareCenterScreen> {
           0,
           ShareCardInfo(
             title: kandil.name,
-            icon: "🌙",
-            description: "Kandil mesajını paylaş",
+            icon: '🌙',
+            description: 'Kandil mesajını paylaş',
             builder: () => KandilCard(
               kandilName: kandil.name,
               message: kandil.message,
@@ -90,9 +89,9 @@ class _ShareCenterScreenState extends State<ShareCenterScreen> {
       cards.insert(
           0,
           ShareCardInfo(
-            title: "Cuma Mesajı",
-            icon: "🕌",
-            description: "Hayırlı Cumalar",
+            title: 'Cuma Mesajı',
+            icon: '🕌',
+            description: 'Hayırlı Cumalar',
             builder: () => const CumaCard(),
             isSpecial: true,
           ));
@@ -116,7 +115,7 @@ class _ShareCenterScreenState extends State<ShareCenterScreen> {
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
-          "Paylaşım Merkezi",
+          'Paylaşım Merkezi',
           style: TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.w600,
@@ -181,7 +180,7 @@ class _ShareCenterScreenState extends State<ShareCenterScreen> {
                               ),
                               if (card.isSpecial) ...[
                                 const SizedBox(width: 4),
-                                Text("✨", style: TextStyle(fontSize: 14)),
+                                const Text('✨', style: TextStyle(fontSize: 14)),
                               ],
                             ],
                           ),
@@ -218,7 +217,7 @@ class _ShareCenterScreenState extends State<ShareCenterScreen> {
                     Expanded(
                       child: _ShareButton(
                         icon: Icons.share_rounded,
-                        label: "Paylaş",
+                        label: 'Paylaş',
                         color: Colors.white,
                         isLoading: _isSharing,
                         onTap: _shareCard,
@@ -228,7 +227,7 @@ class _ShareCenterScreenState extends State<ShareCenterScreen> {
                     Expanded(
                       child: _ShareButton(
                         icon: Icons.save_alt_rounded,
-                        label: "Kaydet",
+                        label: 'Kaydet',
                         color: AppColors.goldenHour,
                         isLoading: false,
                         onTap: _saveCard,
@@ -267,7 +266,7 @@ class _ShareCenterScreenState extends State<ShareCenterScreen> {
     if (mounted && path != null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text("Kart kaydedildi! 📸"),
+          content: const Text('Kart kaydedildi! 📸'),
           backgroundColor: AppColors.goldenHour,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
@@ -280,11 +279,6 @@ class _ShareCenterScreenState extends State<ShareCenterScreen> {
 }
 
 class ShareCardInfo {
-  final String title;
-  final String icon;
-  final String description;
-  final Widget Function() builder;
-  final bool isSpecial;
 
   ShareCardInfo({
     required this.title,
@@ -293,14 +287,14 @@ class ShareCardInfo {
     required this.builder,
     this.isSpecial = false,
   });
+  final String title;
+  final String icon;
+  final String description;
+  final Widget Function() builder;
+  final bool isSpecial;
 }
 
 class _ShareButton extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final Color color;
-  final bool isLoading;
-  final VoidCallback onTap;
 
   const _ShareButton({
     required this.icon,
@@ -309,6 +303,11 @@ class _ShareButton extends StatelessWidget {
     required this.isLoading,
     required this.onTap,
   });
+  final IconData icon;
+  final String label;
+  final Color color;
+  final bool isLoading;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {

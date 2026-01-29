@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../features/social/data/models/soul_signal.dart';
 
 /// CustomPainter for the VİCDAN Tree
 /// Renders trunk, branches, and leaf clusters with health-based states
@@ -10,6 +11,7 @@ class TreePainter extends CustomPainter {
     required this.animationValue,
     this.leafSwayValue = 0.0,
     this.glowIntensity = 0.0,
+    this.activeSignals = const [],
   });
 
   /// Tree health score (0-100)
@@ -24,8 +26,12 @@ class TreePainter extends CustomPainter {
   /// Glow effect intensity (0-1) for task completion
   final double glowIntensity;
 
+  /// Active social signals (prayers)
+  final List<SoulSignal> activeSignals;
+
   @override
   void paint(Canvas canvas, Size size) {
+    // ... existing implementation remains same until _drawSocialRoots ...
     final centerX = size.width / 2;
     final groundY = size.height * 0.85;
 
@@ -42,7 +48,7 @@ class TreePainter extends CustomPainter {
       _drawGlow(canvas, size, centerX, groundY);
     }
 
-    // Draw trunk
+    // Draw trunk and roots
     _drawTrunk(canvas, centerX, groundY);
 
     // Draw branches based on health
@@ -61,6 +67,7 @@ class TreePainter extends CustomPainter {
     canvas.restore();
   }
 
+  // ... _drawGlow remains same ...
   void _drawGlow(Canvas canvas, Size size, double centerX, double groundY) {
     final glowPaint = Paint()
       ..shader = RadialGradient(
@@ -82,6 +89,7 @@ class TreePainter extends CustomPainter {
     );
   }
 
+  // ... _drawTrunk remains same until _drawSocialRoots call ...
   void _drawTrunk(Canvas canvas, double centerX, double groundY) {
     final trunkWidth = 20.0 + (healthScore / 100) * 10;
     final trunkHeight = 80.0 + (healthScore / 100) * 20;
@@ -147,6 +155,81 @@ class TreePainter extends CustomPainter {
       ),
       groundShadowPaint,
     );
+
+    // Social Roots (Görünmez Bağlar) - REAL TIME DATA
+    _drawSocialRoots(canvas, centerX, groundY, trunkWidth);
+  }
+
+  void _drawSocialRoots(
+      Canvas canvas, double centerX, double groundY, double trunkWidth) {
+    if (activeSignals.isEmpty) {
+      // Draw one subtle pulse just to show system is alive
+      _drawSingleRootNode(canvas, centerX, groundY, trunkWidth,
+          Offset(centerX, groundY + 50), 0.2);
+      return;
+    }
+
+    final now = DateTime.now().millisecondsSinceEpoch;
+
+    // Root base structure (static)
+    final rootPaint = Paint()
+      ..color = AppColors.accentGold.withOpacity(0.15)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2;
+
+    final rootPath = Path();
+    rootPath.moveTo(centerX - trunkWidth / 3, groundY);
+    rootPath.quadraticBezierTo(centerX - trunkWidth, groundY + 40,
+        centerX - trunkWidth * 2, groundY + 80);
+
+    rootPath.moveTo(centerX + trunkWidth / 3, groundY);
+    rootPath.quadraticBezierTo(centerX + trunkWidth, groundY + 40,
+        centerX + trunkWidth * 2, groundY + 80);
+
+    rootPath.moveTo(centerX, groundY + 5);
+    rootPath.lineTo(centerX, groundY + 60);
+
+    canvas.drawPath(rootPath, rootPaint);
+
+    // Draw active signals as glowing nodes
+    for (int i = 0; i < activeSignals.length; i++) {
+      final signal = activeSignals[i];
+
+      // Deterministic position based on signal ID hash
+      final hash = signal.id.hashCode;
+      final randomX = (hash % 100) / 50.0 - 1.0; // -1 to 1
+      final randomY = (hash % 50) / 50.0; // 0 to 1
+
+      final offsetX = centerX + (randomX * trunkWidth * 3);
+      final offsetY = groundY + 40 + (randomY * 60);
+
+      // Pulse based on time + index offset
+      final pulse = (math.sin((now / 1000) + i) + 1) / 2;
+
+      _drawSingleRootNode(canvas, centerX, groundY, trunkWidth,
+          Offset(offsetX, offsetY), pulse);
+    }
+  }
+
+  void _drawSingleRootNode(Canvas canvas, double centerX, double groundY,
+      double trunkWidth, Offset pos, double pulse) {
+    final nodePaint = Paint()
+      ..color = AppColors.accentGold.withOpacity(0.6 * pulse)
+      ..style = PaintingStyle.fill;
+
+    canvas.drawCircle(pos, 3 + pulse * 2, nodePaint);
+
+    // Glow halo
+    canvas.drawCircle(pos, 8 + pulse * 4,
+        Paint()..color = AppColors.accentGold.withOpacity(0.1 * pulse));
+
+    // Connection line to center (very faint)
+    final linePaint = Paint()
+      ..color = AppColors.accentGold.withOpacity(0.05 * pulse)
+      ..strokeWidth = 1
+      ..style = PaintingStyle.stroke;
+
+    canvas.drawLine(Offset(centerX, groundY + 10), pos, linePaint);
   }
 
   void _drawBranches(Canvas canvas, double centerX, double groundY) {
@@ -326,6 +409,8 @@ class TreePainter extends CustomPainter {
     return oldDelegate.healthScore != healthScore ||
         oldDelegate.animationValue != animationValue ||
         oldDelegate.leafSwayValue != leafSwayValue ||
-        oldDelegate.glowIntensity != glowIntensity;
+        oldDelegate.glowIntensity != glowIntensity ||
+        oldDelegate.activeSignals.length !=
+            activeSignals.length; // Simplistic check (length)
   }
 }

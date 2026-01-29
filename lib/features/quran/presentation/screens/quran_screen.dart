@@ -143,7 +143,7 @@ class _QuranScreenState extends State<QuranScreen> {
           // Back button
           IconButton(
             onPressed: () => Navigator.pop(context),
-            icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+            icon: const Icon(Icons.arrow_back_ios, color: AppColors.textDark),
           ),
 
           const SizedBox(width: 8),
@@ -156,7 +156,7 @@ class _QuranScreenState extends State<QuranScreen> {
                 Text(
                   'Kur\'an-ı Kerim',
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        color: Colors.white,
+                        color: AppColors.textDark,
                         fontWeight: FontWeight.w700,
                         letterSpacing: 0.5,
                       ),
@@ -164,7 +164,7 @@ class _QuranScreenState extends State<QuranScreen> {
                 Text(
                   '${_filteredSurahs.length} Sure',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Colors.white70,
+                        color: AppColors.textLight,
                       ),
                 ),
               ],
@@ -172,7 +172,6 @@ class _QuranScreenState extends State<QuranScreen> {
           ),
 
           // Radio Button
-          // Radio Button with Label
           InkWell(
             onTap: () {
               Navigator.push(
@@ -184,19 +183,26 @@ class _QuranScreenState extends State<QuranScreen> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.15),
+                color: Colors.white,
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.white.withOpacity(0.2)),
+                border: Border.all(color: AppColors.glassBorder),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
               child: Row(
                 children: [
                   const Icon(Icons.radio,
-                      color: AppColors.goldenHour, size: 20),
+                      color: AppColors.accentGold, size: 20),
                   const SizedBox(width: 6),
                   Text(
-                    "7/24 Radyo",
+                    '7/24 Radyo',
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.9),
+                      color: AppColors.textDark.withOpacity(0.8),
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
                     ),
@@ -216,25 +222,32 @@ class _QuranScreenState extends State<QuranScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.15),
+          color: Colors.white,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: Colors.white.withOpacity(0.2),
+            color: AppColors.glassBorder,
             width: 1,
           ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.03),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: TextField(
           controller: _searchController,
-          style: const TextStyle(color: Colors.white),
+          style: const TextStyle(color: AppColors.textDark),
           decoration: InputDecoration(
             hintText: 'Sure ara (Fatiha, Bakara...)',
-            hintStyle: TextStyle(color: Colors.white.withOpacity(0.5)),
+            hintStyle: TextStyle(color: AppColors.textLight.withOpacity(0.5)),
             prefixIcon:
-                Icon(Icons.search, color: Colors.white.withOpacity(0.7)),
+                Icon(Icons.search, color: AppColors.textLight.withOpacity(0.7)),
             suffixIcon: _searchController.text.isNotEmpty
                 ? IconButton(
-                    icon:
-                        Icon(Icons.clear, color: Colors.white.withOpacity(0.7)),
+                    icon: Icon(Icons.clear,
+                        color: AppColors.textLight.withOpacity(0.7)),
                     onPressed: () {
                       _searchController.clear();
                     },
@@ -296,16 +309,20 @@ class _QuranScreenState extends State<QuranScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected
-              ? Colors.white.withOpacity(0.25)
-              : Colors.white.withOpacity(0.1),
+          color: isSelected ? AppColors.primaryGreen : Colors.white,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected
-                ? Colors.white.withOpacity(0.5)
-                : Colors.white.withOpacity(0.2),
+            color: isSelected ? AppColors.primaryGreen : AppColors.glassBorder,
             width: 1,
           ),
+          boxShadow: [
+            if (!isSelected)
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 4,
+                offset: const Offset(0, 2),
+              ),
+          ],
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -313,13 +330,13 @@ class _QuranScreenState extends State<QuranScreen> {
             Icon(
               icon,
               size: 16,
-              color: isSelected ? Colors.white : Colors.white70,
+              color: isSelected ? Colors.white : AppColors.textLight,
             ),
             const SizedBox(width: 6),
             Text(
               label,
               style: TextStyle(
-                color: isSelected ? Colors.white : Colors.white70,
+                color: isSelected ? Colors.white : AppColors.textDark,
                 fontSize: 13,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
               ),

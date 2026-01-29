@@ -21,7 +21,8 @@ class PrayerTimesRepository {
     DateTime? effectiveNextTime = nextPrayerTime;
     String effectiveNextName = _getPrayerName(nextPrayer);
     if (nextPrayer == Prayer.none || nextPrayerTime == null) {
-      final tomorrow = DateComponents.from(DateTime.now().add(const Duration(days: 1)));
+      final tomorrow =
+          DateComponents.from(DateTime.now().add(const Duration(days: 1)));
       final tomorrowTimes = PrayerTimes(myCoordinates, tomorrow, params);
       effectiveNextTime = tomorrowTimes.fajr;
       effectiveNextName = _getPrayerName(Prayer.fajr);
@@ -35,8 +36,11 @@ class PrayerTimesRepository {
       'maghrib': DateFormat.Hm().format(prayerTimes.maghrib),
       'isha': DateFormat.Hm().format(prayerTimes.isha),
       'next_prayer_name': effectiveNextName,
-      'next_prayer_time': effectiveNextTime != null ? DateFormat.Hm().format(effectiveNextTime) : '-',
+      'next_prayer_time': effectiveNextTime != null
+          ? DateFormat.Hm().format(effectiveNextTime)
+          : '-',
       'next_prayer_datetime': effectiveNextTime,
+      'maghrib_datetime': prayerTimes.maghrib,
     };
   }
 

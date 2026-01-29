@@ -120,7 +120,7 @@ class FractalTreePainter extends CustomPainter {
     // Generate trunk
     final trunk = Branch(
       start: startPoint,
-      end: Offset(0, -trunkLength),
+      end: const Offset(0, -trunkLength),
       thickness: trunkThickness,
       depth: 0,
       angle: 0,
@@ -298,12 +298,12 @@ class FractalTreePainter extends CustomPainter {
       // Color based on depth
       if (branch.depth == 0) {
         // Trunk - darker brown
-        branchPaint.shader = LinearGradient(
+        branchPaint.shader = const LinearGradient(
           begin: Alignment.bottomCenter,
           end: Alignment.topCenter,
           colors: [
-            const Color(0xFF3D2817),
-            const Color(0xFF5C4033),
+            Color(0xFF3D2817),
+            Color(0xFF5C4033),
           ],
         ).createShader(Rect.fromPoints(branch.start, endPoint));
       } else {

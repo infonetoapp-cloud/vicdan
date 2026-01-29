@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 
 class DigitalMahyaWidget extends StatelessWidget {
-  final String message;
 
   const DigitalMahyaWidget({
     super.key,
     required this.message,
   });
+  final String message;
 
   @override
   Widget build(BuildContext context) {

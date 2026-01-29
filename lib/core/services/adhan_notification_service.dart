@@ -200,8 +200,8 @@ class AdhanNotificationService {
     await cancelAllAdhanNotifications();
 
     final prefs = await SharedPreferences.getInstance();
-    final lat = prefs.getDouble('last_latitude') ?? 41.0082;
-    final lng = prefs.getDouble('last_longitude') ?? 28.9784;
+    final lat = prefs.getDouble('latitude') ?? 41.0082;
+    final lng = prefs.getDouble('longitude') ?? 28.9784;
 
     final prayerTimes = _calculatePrayerTimes(lat, lng);
     final now = DateTime.now();
@@ -225,24 +225,81 @@ class AdhanNotificationService {
     }
   }
 
+  // ========== EQ Notification Messages (Soulful) ==========
+  static const Map<String, List<String>> _soulfulMessages = {
+    'fajr': [
+      "Güneş doğmadan ruhunu aydınlat. 🌅",
+      "Seher vakti, kalbinin en duyarlı anı.",
+      "Yeni bir güne Bismillah de.",
+      "Uykudan daha hayırlı bir çağrı var.",
+    ],
+    'dhuhr': [
+      "Günün ortasında derin bir nefes al. ☀️",
+      "Dünya işlerine kısa bir mola ver.",
+      "Öğle sıcağında serin bir sığınak: Namaz.",
+      "Ruhunun gıdasını ihmal etme.",
+    ],
+    'asr': [
+      "Güneşin rengi değişiyor, asra yemin olsun. 🌇",
+      "Zaman hızla akıyor, bir an dur ve hatırla.",
+      "İkindi vakti, günün hesaplaşma provasıdır.",
+      "Hüzün çökmeden kalbini ferahlat.",
+    ],
+    'maghrib': [
+      "Akşamın hüznü çökerken, Rabbine sığın. 🌙",
+      "Günün hesabını verme vakti.",
+      "İftar sevinci gibi bir huzur seni bekliyor.",
+      "Güneş battı ama umut bâki.",
+    ],
+    'isha': [
+      "Gece sükuneti, ruhun dinlenme vakti. 🌌",
+      "Günü huzurla kapat, yarına umutla uyan.",
+      "Karanlıkta parlayan bir nur ol.",
+      "En sevgiliyle buluşma anı.",
+    ],
+  };
+
+  String _getRandomMessage(String prayerKey) {
+    final messages = _soulfulMessages[prayerKey];
+    if (messages == null || messages.isEmpty) {
+      return "${prayerNames[prayerKey]} namazı vakti geldi";
+    }
+    return messages[
+        DateTime.now().second % messages.length]; // Simple deterministic random
+  }
+
   Future<void> _scheduleAdhanNotification({
     required int id,
     required String prayerName,
     required DateTime scheduledTime,
   }) async {
+    // Determine the key based on name (reverse lookup or pass key directly)
+    // Since we only passed name, let's find the key.
+    String key = prayerNames.entries
+        .firstWhere((element) => element.value == prayerName,
+            orElse: () => const MapEntry('fajr', 'Sabah'))
+        .key;
+
+    final soulfulMessage = _getRandomMessage(key);
+
     const androidDetails = AndroidNotificationDetails(
       'adhan_channel',
       'Ezan Bildirimleri',
       channelDescription: 'Namaz vakitlerinde ezan bildirimi',
       importance: Importance.high,
       priority: Priority.high,
-      playSound: false,
+      playSound:
+          true, // Enable sound if needed, or handle custom sound via playsound:false logic
+      sound: RawResourceAndroidNotificationSound(
+          'adhan_mishary'), // Default gentle sound if available
       enableVibration: true,
+      styleInformation: BigTextStyleInformation(''), // Allow multiline text
     );
 
     const iosDetails = DarwinNotificationDetails(
       presentAlert: true,
-      presentSound: false,
+      presentSound: true,
+      sound: 'adhan_mishary.caf', // Ensure this file exists in iOS bundle
     );
 
     const details = NotificationDetails(
@@ -254,8 +311,8 @@ class AdhanNotificationService {
 
     await _notifications.zonedSchedule(
       id,
-      'Ezan Vakti 🕌',
-      '$prayerName namazı vakti geldi',
+      'Vakit Geldi 🕌', // Less mechanical title
+      soulfulMessage, // POETIC MESSAGE HERE
       tzTime,
       details,
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
@@ -264,7 +321,8 @@ class AdhanNotificationService {
       payload: prayerName,
     );
 
-    debugPrint("Scheduled adhan for $prayerName at $scheduledTime");
+    debugPrint(
+        "Scheduled EQ Adhan ($soulfulMessage) for $prayerName at $scheduledTime");
   }
 
   Future<void> cancelAllAdhanNotifications() async {

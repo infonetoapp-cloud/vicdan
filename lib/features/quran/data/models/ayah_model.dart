@@ -5,9 +5,6 @@ import '../../domain/entities/ayah.dart';
 /// This model handles conversion between JSON and domain entity.
 /// Used by the data layer only.
 class AyahModel {
-  final int number;
-  final String arabic;
-  final String translation;
 
   const AyahModel({
     required this.number,
@@ -33,6 +30,18 @@ class AyahModel {
     );
   }
 
+  /// Creates AyahModel from domain entity
+  factory AyahModel.fromEntity(Ayah entity) {
+    return AyahModel(
+      number: entity.number,
+      arabic: entity.arabic,
+      translation: entity.translation,
+    );
+  }
+  final int number;
+  final String arabic;
+  final String translation;
+
   /// Converts AyahModel to JSON
   Map<String, dynamic> toJson() {
     return {
@@ -48,15 +57,6 @@ class AyahModel {
       number: number,
       arabic: arabic,
       translation: translation,
-    );
-  }
-
-  /// Creates AyahModel from domain entity
-  factory AyahModel.fromEntity(Ayah entity) {
-    return AyahModel(
-      number: entity.number,
-      arabic: entity.arabic,
-      translation: entity.translation,
     );
   }
 

@@ -3,21 +3,21 @@ import 'share_card_base.dart';
 
 /// Bayram (Eid) sharing card
 class BayramCard extends ShareCard {
-  final String bayramName;
-  final String message;
 
   const BayramCard({
     super.key,
     required this.bayramName,
     required this.message,
   });
+  final String bayramName;
+  final String message;
 
   @override
   Widget build(BuildContext context) {
     return AspectRatio(
       aspectRatio: ShareCard.aspectRatio,
       child: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
@@ -35,15 +35,15 @@ class BayramCard extends ShareCard {
               child: Column(
                 children: [
                   // Header
-                  Row(
+                  const Row(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    children: const [
-                      Text("🎉", style: TextStyle(fontSize: 28)),
+                    children: [
+                      Text('🎉', style: TextStyle(fontSize: 28)),
                       SizedBox(width: 12),
-                      Text("✨", style: TextStyle(fontSize: 24)),
+                      Text('✨', style: TextStyle(fontSize: 24)),
                       SizedBox(width: 12),
                       Text(
-                        "VİCDAN",
+                        'VİCDAN',
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 24,
@@ -52,9 +52,9 @@ class BayramCard extends ShareCard {
                         ),
                       ),
                       SizedBox(width: 12),
-                      Text("✨", style: TextStyle(fontSize: 24)),
+                      Text('✨', style: TextStyle(fontSize: 24)),
                       SizedBox(width: 12),
-                      Text("🎊", style: TextStyle(fontSize: 28)),
+                      Text('🎊', style: TextStyle(fontSize: 28)),
                     ],
                   ),
 
@@ -64,11 +64,11 @@ class BayramCard extends ShareCard {
                   const Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text("🌙", style: TextStyle(fontSize: 50)),
+                      Text('🌙', style: TextStyle(fontSize: 50)),
                       SizedBox(width: 30),
-                      Text("🕌", style: TextStyle(fontSize: 70)),
+                      Text('🕌', style: TextStyle(fontSize: 70)),
                       SizedBox(width: 30),
-                      Text("🌙", style: TextStyle(fontSize: 50)),
+                      Text('🌙', style: TextStyle(fontSize: 50)),
                     ],
                   ),
 
@@ -78,11 +78,11 @@ class BayramCard extends ShareCard {
                   const Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text("🎆", style: TextStyle(fontSize: 40)),
+                      Text('🎆', style: TextStyle(fontSize: 40)),
                       SizedBox(width: 20),
-                      Text("🎇", style: TextStyle(fontSize: 50)),
+                      Text('🎇', style: TextStyle(fontSize: 50)),
                       SizedBox(width: 20),
-                      Text("🎆", style: TextStyle(fontSize: 40)),
+                      Text('🎆', style: TextStyle(fontSize: 40)),
                     ],
                   ),
 
@@ -122,8 +122,8 @@ class BayramCard extends ShareCard {
                           ),
                         ),
                         const SizedBox(height: 12),
-                        Text(
-                          "MÜBAREK OLSUN!",
+                        const Text(
+                          'MÜBAREK OLSUN!',
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 28,
@@ -139,7 +139,7 @@ class BayramCard extends ShareCard {
 
                   // Message
                   Text(
-                    "\"$message\"",
+                    '"$message"',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: Colors.white.withOpacity(0.9),
@@ -153,7 +153,7 @@ class BayramCard extends ShareCard {
 
                   // Watermark
                   Text(
-                    "vicdan.app",
+                    'vicdan.app',
                     style: TextStyle(
                       color: Colors.white.withOpacity(0.4),
                       fontSize: 18,
@@ -173,7 +173,7 @@ class BayramCard extends ShareCard {
     return [
       // Confetti simulation
       ...List.generate(15, (i) {
-        final emojis = ["🎉", "🎊", "✨", "🌟"];
+        final emojis = ['🎉', '🎊', '✨', '🌟'];
         return Positioned(
           left: (i * 67) % 380 + 10.0,
           top: (i * 89) % 800 + 20.0,

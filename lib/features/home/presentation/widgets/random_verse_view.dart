@@ -1,7 +1,7 @@
-import 'dart:math';
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/widgets/glass_card.dart';
+import '../../data/tevafuk_database.dart';
 
 class RandomVerseView extends StatefulWidget {
   final VoidCallback onComplete;
@@ -18,33 +18,14 @@ class _RandomVerseViewState extends State<RandomVerseView>
   late Animation<double> _scaleAnimation;
   late Animation<double> _opacityAnimation;
 
-  // Temporary list of verses (Tevafuk)
-  final List<Map<String, String>> _verses = [
-    {
-      "text": "Rabbin, seni terk etmedi ve sana darılmadı.",
-      "source": "Duha Suresi, 3"
-    },
-    {
-      "text": "Şüphesiz güçlükle beraber bir kolaylık vardır.",
-      "source": "İnşirah Suresi, 5"
-    },
-    {"text": "Allah sabredenlerle beraberdir.", "source": "Bakara Suresi, 153"},
-    {
-      "text": "Sabret! Senin sabrın ancak Allah'ın yardımı iledir.",
-      "source": "Nahl Suresi, 127"
-    },
-    {
-      "text": "Bilsin ki insan için kendi çalışmasından başka bir şey yoktur.",
-      "source": "Necm Suresi, 39"
-    },
-  ];
-
-  late Map<String, String> _selectedVerse;
+  // Tevafuk Engine Integration
+  late TevafukItem _selectedItem;
 
   @override
   void initState() {
     super.initState();
-    _selectedVerse = _verses[Random().nextInt(_verses.length)];
+    // In the future, we can pass a 'Mood' to this widget to prioritize specific categories
+    _selectedItem = TevafukDatabase.getRandomItem();
 
     _controller = AnimationController(
       vsync: this,
@@ -144,7 +125,7 @@ class _RandomVerseViewState extends State<RandomVerseView>
                             color: AppColors.accentGold, size: 40),
                         const SizedBox(height: 16),
                         Text(
-                          _selectedVerse['text']!,
+                          _selectedItem.text,
                           textAlign: TextAlign.center,
                           style: const TextStyle(
                             fontSize: 20,
@@ -156,7 +137,7 @@ class _RandomVerseViewState extends State<RandomVerseView>
                         ),
                         const SizedBox(height: 24),
                         Text(
-                          _selectedVerse['source']!,
+                          _selectedItem.source,
                           style: const TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,

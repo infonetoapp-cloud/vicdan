@@ -2,6 +2,8 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'tree_painter.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../features/social/data/services/social_roots_service.dart';
+import '../../../../features/social/data/models/soul_signal.dart';
 
 /// Interactive tree widget with animations
 class TreeWidget extends StatefulWidget {
@@ -150,16 +152,24 @@ class TreeWidgetState extends State<TreeWidget> with TickerProviderStateMixin {
           return Stack(
             children: [
               // Tree
-              CustomPaint(
-                painter: TreePainter(
-                  healthScore: widget.healthScore,
-                  animationValue:
-                      _breathingAnimation.value + _shakeAnimation.value,
-                  leafSwayValue: _leafSwayAnimation.value,
-                  glowIntensity: _glowAnimation.value,
-                ),
-                size: Size.infinite,
-              ),
+              StreamBuilder<List<SoulSignal>>(
+                  stream: SocialRootsService().listenToGlobalRoots(),
+                  initialData: const [],
+                  builder: (context, snapshot) {
+                    final activeSignals = snapshot.data ?? [];
+
+                    return CustomPaint(
+                      painter: TreePainter(
+                        healthScore: widget.healthScore,
+                        animationValue:
+                            _breathingAnimation.value + _shakeAnimation.value,
+                        leafSwayValue: _leafSwayAnimation.value,
+                        glowIntensity: _glowAnimation.value,
+                        activeSignals: activeSignals,
+                      ),
+                      size: Size.infinite,
+                    );
+                  }),
 
               // Falling leaves
               ..._fallingLeaves.map((leaf) => _FallingLeafWidget(leaf: leaf)),
@@ -265,14 +275,14 @@ class _FallingLeafWidgetState extends State<_FallingLeafWidget>
               child: Container(
                 width: 12,
                 height: 12,
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   gradient: RadialGradient(
                     colors: [
                       AppColors.leafLight,
                       AppColors.leafMedium,
                     ],
                   ),
-                  borderRadius: const BorderRadius.only(
+                  borderRadius: BorderRadius.only(
                     topLeft: Radius.circular(10),
                     topRight: Radius.circular(2),
                     bottomLeft: Radius.circular(2),

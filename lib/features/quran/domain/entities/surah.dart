@@ -6,6 +6,15 @@ import 'ayah.dart';
 /// This is a pure business entity with no dependencies on data layer.
 /// Immutable and contains only business logic.
 class Surah extends Equatable {
+
+  const Surah({
+    required this.number,
+    required this.nameArabic,
+    required this.nameTurkish,
+    required this.revelationPlace,
+    required this.totalAyahs,
+    required this.ayahs,
+  });
   /// Surah number in the Quran (1-114)
   final int number;
 
@@ -23,15 +32,6 @@ class Surah extends Equatable {
 
   /// List of all ayahs in this surah
   final List<Ayah> ayahs;
-
-  const Surah({
-    required this.number,
-    required this.nameArabic,
-    required this.nameTurkish,
-    required this.revelationPlace,
-    required this.totalAyahs,
-    required this.ayahs,
-  });
 
   /// Creates a copy of this Surah with updated fields
   Surah copyWith({
